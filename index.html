@@ -267,9 +267,10 @@ function bRecap(selM,selC){
 /* ===== PHOTO ZONE - UN SEUL BOUTON ===== */
 function photoZone(pid,arr,label){
   return`<div class="pzone">
-    <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}')">
+    <label class="photo-main-btn" for="inp-${pid}">
       📷 ${label||'Ajouter des photos'}
-    </button>
+    </label>
+    <input type="file" id="inp-${pid}" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <div class="pprev" id="prev-${pid}">${thumbs(pid,arr)}</div>
   </div>`;
 }
@@ -288,19 +289,7 @@ function showPhotoMenu(pid){
   document.body.appendChild(as);
 }
 function closeAS(pid){const a=document.getElementById('ao-'+pid);const b=document.getElementById('as-'+pid);if(a)a.remove();if(b)b.remove();}
-function trigP(pid,type){
-  closeAS(pid);
-  // Créer input dynamiquement pour éviter le menu natif iOS
-  const inp=document.createElement('input');
-  inp.type='file';
-  inp.accept='image/*';
-  if(type==='cam')inp.capture='environment';
-  if(type!=='cam')inp.multiple=true;
-  inp.style.display='none';
-  inp.onchange=()=>{onPhoto(pid,inp);inp.remove();};
-  document.body.appendChild(inp);
-  setTimeout(()=>inp.click(),50);
-}
+function trigP(pid,type){document.getElementById(`inp-${pid}-${type}`).click();}
 function getPhotos(pid){
   if(pid.startsWith('avant-'))return missionPhotosAvant[pid]||(missionPhotosAvant[pid]=[]);
   if(pid.startsWith('apres-'))return missionPhotosApres[pid]||(missionPhotosApres[pid]=[]);
