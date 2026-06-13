@@ -348,6 +348,7 @@ function delClient(id){if(confirm('Supprimer ce client ?')){D.clients=D.clients.
 function newLigne(){return{id:'l'+(ligneIdx++),type:'Prestation',designation:'',qte:1,prix:''};}
 function renderLignes(){
   const c=document.getElementById('lignes-container');if(!c)return;
+  lignesTemp.forEach(l=>{if(!linePhotos['ligne-'+l.id])linePhotos['ligne-'+l.id]=l.photosLigne||[];});
   c.innerHTML=lignesTemp.map((l,i)=>`
   <div style="background:#fff;border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid #e5e5ea">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0eeff;border-bottom:1px solid #e5e5ea">
@@ -363,14 +364,27 @@ function renderLignes(){
     <div style="padding:8px 12px;border-bottom:1px solid #f5f5f5">
       <input style="width:100%;border:none;font-size:14px;color:#1c1c1e;outline:none;background:transparent" value="${l.designation||''}" placeholder="Description des travaux..." onchange="updL('${l.id}','designation',this.value)">
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;gap:8px;align-items:center">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;padding:6px 12px;gap:8px;align-items:center">
       <div><div style="font-size:10px;color:#8e8e93;text-transform:uppercase;font-weight:600;margin-bottom:2px">Qté</div><input type="number" style="width:100%;border:none;font-size:14px;font-weight:500;color:#1c1c1e;outline:none;background:transparent;text-align:center" value="${l.qte||1}" min="1" onchange="updL('${l.id}','qte',this.value)"></div>
       <div><div style="font-size:10px;color:#8e8e93;text-transform:uppercase;font-weight:600;margin-bottom:2px">Prix €</div><input type="number" style="width:100%;border:none;font-size:14px;font-weight:500;color:#1c1c1e;outline:none;background:transparent;text-align:center" value="${l.prix||''}" placeholder="0.00" step="0.01" onchange="updL('${l.id}','prix',this.value)"></div>
       <div style="text-align:right"><div style="font-size:10px;color:#065f46;text-transform:uppercase;font-weight:600;margin-bottom:2px">Total</div><div style="font-size:14px;font-weight:700;color:#065f46">${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</div></div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#8e8e93;text-transform:uppercase;font-weight:600;margin-bottom:2px">Photo</div>
+        <label for="inp-ligne-${l.id}" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#f0f7ff;border:1px solid #007AFF;cursor:pointer;font-size:18px">📷</label>
+        <input type="file" id="inp-ligne-${l.id}" accept="image/*" multiple style="display:none" onchange="onPhotoLigne('${l.id}',this)">
+      </div>
     </div>
+    ${(linePhotos['ligne-'+l.id]||[]).length>0?`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 12px 10px">${(linePhotos['ligne-'+l.id]||[]).map((src,pi)=>`<div style="position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;border:1px solid #e5e5ea"><img src="${src}" style="width:100%;height:100%;object-fit:cover"><button onclick="rmPhotoLigne('${l.id}',${pi})" style="position:absolute;top:1px;right:1px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button></div>`).join('')}</div>`:''}
   </div>`).join('');
   updateTotals();
 }
+
+function onPhotoLigne(lid,inp){
+  if(!linePhotos['ligne-'+lid])linePhotos['ligne-'+lid]=[];
+  Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{linePhotos['ligne-'+lid].push(e.target.result);renderLignes();};r.readAsDataURL(f);});
+  inp.value='';
+}
+function rmPhotoLigne(lid,i){linePhotos['ligne-'+lid].splice(i,1);renderLignes();}
 function updL(id,key,val){const l=lignesTemp.find(x=>x.id===id);if(!l)return;l[key]=val;updateTotals();}
 function addLigne(){const l=newLigne();lignesTemp.push(l);renderLignes();}
 function delLigne(id){lignesTemp=lignesTemp.filter(l=>l.id!==id);renderLignes();}
@@ -422,7 +436,7 @@ function saveMission(id){
   const cid=parseInt(document.getElementById('f-cid').value);
   const chantier=document.getElementById('f-ch').value.trim();
   if(!cid||!chantier){alert('Client et chantier obligatoires');return;}
-  const lignes=lignesTemp.map(l=>({...l}));
+  const lignes=lignesTemp.map(l=>({...l,photosLigne:[...(linePhotos["ligne-"+l.id]||[])]}));
   const m=id?D.missions.find(x=>x.id===id):null;
   const obj={
     id:id||D.mid++,cid,
