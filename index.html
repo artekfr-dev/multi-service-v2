@@ -48,10 +48,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
 .sheet-title{font-size:17px;font-weight:600}
 .sheet-body{padding:0 12px 16px;display:flex;flex-direction:column;gap:10px}
 .form-section{background:#fff;border-radius:12px;overflow:hidden}
-.form-cell{padding:0 16px;border-bottom:0.5px solid #f2f2f7}
+.form-cell{padding:0 14px;border-bottom:0.5px solid #f2f2f7}
 .form-cell:last-child{border-bottom:none}
-.form-label{font-size:12px;color:#8e8e93;font-weight:500;padding-top:10px;text-transform:uppercase;letter-spacing:.4px}
-.form-input{width:100%;border:none;background:transparent;font-size:15px;font-family:inherit;color:#1c1c1e;padding:8px 0 10px;outline:none}
+.form-label{font-size:11px;color:#8e8e93;font-weight:600;padding-top:8px;text-transform:uppercase;letter-spacing:.4px}
+.form-input{width:100%;border:none;background:transparent;font-size:15px;font-family:inherit;color:#1c1c1e;padding:6px 0 8px;outline:none}
 .form-select{width:100%;border:none;background:transparent;font-size:15px;font-family:inherit;color:#1c1c1e;padding:8px 0 10px;outline:none;-webkit-appearance:none}
 .form-textarea{width:100%;border:none;background:transparent;font-size:15px;font-family:inherit;color:#1c1c1e;padding:8px 0 10px;outline:none;resize:none;min-height:80px}
 .ios-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:2px}
@@ -61,8 +61,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
 .ios-btn-danger{background:#fff;color:#ff3b30}
 .ios-btn-orange{background:#ff9500;color:#fff}
 .ios-btn-purple{background:#534AB7;color:#fff}
-.totaux{background:#fff;border-radius:12px;padding:14px 16px}
-.tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:15px}
+.totaux{background:#fff;border-radius:10px;padding:10px 14px}
+.tot-row{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
 .tot-grand{font-weight:700;font-size:17px;color:#007AFF;border-top:0.5px solid #e5e5ea;padding-top:10px;margin-top:6px}
 
 /* Zone photo améliorée */
@@ -267,10 +267,12 @@ function bRecap(selM,selC){
 /* ===== PHOTO ZONE - UN SEUL BOUTON ===== */
 function photoZone(pid,arr,label){
   return`<div class="pzone">
-    <label class="photo-main-btn" for="inp-${pid}">
+    <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}')">
       📷 ${label||'Ajouter des photos'}
-    </label>
-    <input type="file" id="inp-${pid}" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
+    </button>
+    <input type="file" id="inp-${pid}-cam" accept="image/*" capture="environment" style="display:none" onchange="onPhoto('${pid}',this)">
+    <input type="file" id="inp-${pid}-gal" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
+    <input type="file" id="inp-${pid}-file" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <div class="pprev" id="prev-${pid}">${thumbs(pid,arr)}</div>
   </div>`;
 }
@@ -347,23 +349,25 @@ function newLigne(){return{id:'l'+(ligneIdx++),type:'Prestation',designation:'',
 function renderLignes(){
   const c=document.getElementById('lignes-container');if(!c)return;
   c.innerHTML=lignesTemp.map((l,i)=>`
-  <div class="form-section" style="margin-bottom:8px">
-    <div class="form-cell" style="background:#f0eeff">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 8px">
-        <span style="font-size:13px;font-weight:600;color:#534AB7">Ligne ${i+1}</span>
-        <button onclick="delLigne('${l.id}')" style="border:none;background:none;color:#ff3b30;font-size:22px;cursor:pointer">🗑</button>
+  <div style="background:#fff;border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid #e5e5ea">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0eeff;border-bottom:1px solid #e5e5ea">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:700;color:#534AB7">L${i+1}</span>
+        <select style="border:none;background:transparent;font-size:13px;font-weight:600;color:#534AB7;outline:none;-webkit-appearance:none;padding:0" onchange="updL('${l.id}','type',this.value)">
+          <option value="Prestation" ${l.type==='Prestation'?'selected':''}>Prestation</option>
+          <option value="Vente" ${l.type==='Vente'?'selected':''}>Vente</option>
+        </select>
       </div>
-      <select class="form-select" style="padding-bottom:10px" onchange="updL('${l.id}','type',this.value)">
-        <option value="Prestation" ${l.type==='Prestation'?'selected':''}>Prestation</option>
-        <option value="Vente" ${l.type==='Vente'?'selected':''}>Vente</option>
-      </select>
+      <button onclick="delLigne('${l.id}')" style="border:none;background:none;color:#ff3b30;font-size:18px;cursor:pointer;line-height:1">×</button>
     </div>
-    <div class="form-cell"><div class="form-label">Désignation</div><input class="form-input" value="${l.designation||''}" placeholder="Description des travaux" onchange="updL('${l.id}','designation',this.value)"></div>
-    <div class="form-cell" style="display:grid;grid-template-columns:1fr 1fr">
-      <div style="padding-right:8px;border-right:0.5px solid #f2f2f7"><div class="form-label">Quantité</div><input class="form-input" type="number" value="${l.qte||1}" min="1" onchange="updL('${l.id}','qte',this.value)" style="text-align:right"></div>
-      <div style="padding-left:8px"><div class="form-label">Prix €</div><input class="form-input" type="number" value="${l.prix||''}" placeholder="0.00" step="0.01" onchange="updL('${l.id}','prix',this.value)" style="text-align:right"></div>
+    <div style="padding:8px 12px;border-bottom:1px solid #f5f5f5">
+      <input style="width:100%;border:none;font-size:14px;color:#1c1c1e;outline:none;background:transparent" value="${l.designation||''}" placeholder="Description des travaux..." onchange="updL('${l.id}','designation',this.value)">
     </div>
-    <div class="form-cell"><div class="form-label" style="color:#065f46;padding-bottom:8px">Total : ${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;gap:8px;align-items:center">
+      <div><div style="font-size:10px;color:#8e8e93;text-transform:uppercase;font-weight:600;margin-bottom:2px">Qté</div><input type="number" style="width:100%;border:none;font-size:14px;font-weight:500;color:#1c1c1e;outline:none;background:transparent;text-align:center" value="${l.qte||1}" min="1" onchange="updL('${l.id}','qte',this.value)"></div>
+      <div><div style="font-size:10px;color:#8e8e93;text-transform:uppercase;font-weight:600;margin-bottom:2px">Prix €</div><input type="number" style="width:100%;border:none;font-size:14px;font-weight:500;color:#1c1c1e;outline:none;background:transparent;text-align:center" value="${l.prix||''}" placeholder="0.00" step="0.01" onchange="updL('${l.id}','prix',this.value)"></div>
+      <div style="text-align:right"><div style="font-size:10px;color:#065f46;text-transform:uppercase;font-weight:600;margin-bottom:2px">Total</div><div style="font-size:14px;font-weight:700;color:#065f46">${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</div></div>
+    </div>
   </div>`).join('');
   updateTotals();
 }
