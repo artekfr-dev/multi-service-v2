@@ -651,15 +651,49 @@ function generatePDF(cid){
     <div class="pdf-footer">${MSH.name} — ${MSH.adresse}, ${MSH.cp} ${MSH.ville} — ${MSH.tel} — ${MSH.mail}</div>
   `;
 
-  const tpl=document.getElementById('pdf-template');
-  tpl.style.display='block';
-  tpl.innerHTML=html;
-
-  setTimeout(()=>{
-    window.print();
-    tpl.style.display='none';
-    tpl.innerHTML='';
-  },300);
+  // Ouvrir dans une nouvelle page pour partage/impression sur iPhone
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Récapitulatif ${cdn(cl)}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,Arial,sans-serif;font-size:14px;color:#1c1c1e;background:#fff;padding:20px}
+      .header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #1a3a6b;padding-bottom:16px;margin-bottom:20px}
+      .company-name{font-size:20px;font-weight:700;color:#1a3a6b;margin-bottom:4px}
+      .company-info{font-size:12px;color:#555;line-height:1.6}
+      .doc-info{text-align:right;font-size:12px;color:#888}
+      .doc-title{font-size:15px;font-weight:700;color:#1a3a6b;margin-bottom:4px}
+      .client-box{background:#f5f7ff;border-left:3px solid #1a3a6b;padding:10px 14px;margin-bottom:16px;border-radius:0 6px 6px 0}
+      .client-label{font-size:11px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+      .client-name{font-size:15px;font-weight:600;color:#1a3a6b}
+      .mission{border:1px solid #e5e5e5;border-radius:8px;margin-bottom:14px;overflow:hidden}
+      .mission-header{background:#1a3a6b;color:#fff;padding:8px 14px;font-size:13px;font-weight:600}
+      .mission-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px}
+      .info-label{color:#888;font-size:10px;text-transform:uppercase;font-weight:600;margin-bottom:2px}
+      .info-value{font-weight:500}
+      table{width:100%;border-collapse:collapse;font-size:12px;margin:0}
+      th{background:#f5f7ff;color:#1a3a6b;padding:7px 12px;text-align:left;font-size:11px;font-weight:600;border-bottom:1px solid #e5e5e5}
+      td{padding:7px 12px;border-bottom:1px solid #f5f5f5}
+      tr:last-child td{border-bottom:none}
+      .mission-totaux{padding:8px 14px;background:#fafafa;text-align:right;font-size:12px}
+      .total-line{color:#555;margin-bottom:3px}
+      .total-grand{font-size:14px;font-weight:700;color:#1a3a6b;border-top:1px solid #ddd;padding-top:6px;margin-top:4px}
+      .compte-rendu{padding:10px 14px;font-size:12px;color:#555;border-top:1px solid #f0f0f0}
+      .photos-section{padding:10px 14px;border-top:1px solid #f0f0f0}
+      .photos-label{font-size:11px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+      .photos-grid{display:flex;flex-wrap:wrap;gap:6px}
+      .photos-grid img{width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5}
+      .grand-total{background:#1a3a6b;color:#fff;padding:14px;border-radius:8px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700}
+      .footer{margin-top:20px;border-top:1px solid #e5e5e5;padding-top:12px;text-align:center;font-size:11px;color:#888}
+      .share-btn{display:block;width:100%;padding:14px;background:#007AFF;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;margin-bottom:16px;cursor:pointer;font-family:inherit}
+    </style>
+  </head><body>
+    <button class="share-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+    ${html}
+  </body></html>`);
+  win.document.close();
 }
 
 function sheet(title,body){
