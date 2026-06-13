@@ -11,18 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBz9IuIlhKLR55Uv7Ec5c6hHuHJjNWtE50",
-    authDomain: "multi-services-home.firebaseapp.com",
-    projectId: "multi-services-home",
-    storageBucket: "multi-services-home.firebasestorage.app",
-    messagingSenderId: "77041427640",
-    appId: "1:77041427640:web:2fa18e370c021d59b1804d"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;background:#f2f2f7;color:#1c1c1e;min-height:100vh}
@@ -742,10 +730,9 @@ function sheet(title,body){
 function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();}
 
 async function init(){
-  const data=await fbLoad();
-  if(data&&data.clients){D=data;}
+  const data=await loadData();
+  if(data&&(data.clients||data.missions)){D=data;}
   go('dash');
-  console.log('App initialisée - clients:',D.clients.length,'missions:',D.missions.length);
 }
 init();
 </script>
