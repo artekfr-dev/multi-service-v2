@@ -9,8 +9,6 @@
 <title>Multi Services Home</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;background:#f2f2f7;color:#1c1c1e;min-height:100vh}
@@ -186,13 +184,10 @@ function go(t){
 }
 
 function rDash(){
-  // Test Firebase status
-  const fbStatus = db ? '🟢 Firebase connecté' : '🔴 Mode local';
   const ca=D.missions.reduce((s,m)=>s+calcTotal(m),0);
   const enc=D.missions.filter(m=>m.etat==='En cours').length;
   const last=[...D.missions].reverse().slice(0,5);
-  return`<div style="margin:12px 12px 0;padding:10px 14px;background:${db?'#d1fae5':'#fef3c7'};border-radius:10px;font-size:13px;font-weight:500;color:${db?'#065f46':'#92400e'}">${fbStatus}</div>
-  <div class="stats-grid">
+  return`<div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Clients</div><div class="stat-value" style="color:#534AB7">${D.clients.length}</div></div>
     <div class="stat-card"><div class="stat-label">Missions</div><div class="stat-value" style="color:#007AFF">${D.missions.length}</div></div>
     <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value" style="color:#ff9500">${enc}</div></div>
@@ -732,12 +727,7 @@ function sheet(title,body){
 }
 function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();}
 
-async function init(){
-  const data=await loadData();
-  if(data&&(data.clients||data.missions)){D=data;}
-  go('dash');
-}
-init();
+go('dash');
 </script>
 
 <style>
