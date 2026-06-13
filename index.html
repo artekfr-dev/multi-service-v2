@@ -9,6 +9,43 @@
 <title>Multi Services Home</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBz9IuIlhKLR55Uv7Ec5c6hHuHJjNWtE50",
+    authDomain: "multi-services-home.firebaseapp.com",
+    projectId: "multi-services-home",
+    storageBucket: "multi-services-home.firebasestorage.app",
+    messagingSenderId: "77041427640",
+    appId: "1:77041427640:web:2fa18e370c021d59b1804d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const DOC_ID = 'msa_data';
+
+  window.fbLoad = async function() {
+    try {
+      const snap = await getDoc(doc(db, 'app', DOC_ID));
+      if (snap.exists()) return snap.data();
+    } catch(e) { console.log('Firebase load error:', e); }
+    // Fallback localStorage
+    try { const r = localStorage.getItem('msa_v2'); if(r) return JSON.parse(r); } catch(e) {}
+    return null;
+  };
+
+  window.fbSave = async function(data) {
+    try {
+      await setDoc(doc(db, 'app', DOC_ID), data);
+      localStorage.setItem('msa_v2', JSON.stringify(data));
+    } catch(e) {
+      console.log('Firebase save error:', e);
+      try { localStorage.setItem('msa_v2', JSON.stringify(data)); } catch(e2) {}
+    }
+  };
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;background:#f2f2f7;color:#1c1c1e;min-height:100vh}
@@ -727,7 +764,23 @@ function sheet(title,body){
 }
 function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();}
 
-go('dash');
+// Initialisation async avec Firebase
+async function init() {
+  try {
+    if(window.fbLoad) {
+      const data = await window.fbLoad();
+      if(data) D = data;
+      else { try{const r=localStorage.getItem(SK);if(r)D=JSON.parse(r);}catch(e){} }
+    } else {
+      try{const r=localStorage.getItem(SK);if(r)D=JSON.parse(r);}catch(e){}
+    }
+  } catch(e) {
+    try{const r=localStorage.getItem(SK);if(r)D=JSON.parse(r);}catch(e2){}
+  }
+  go('dash');
+}
+// Attendre que Firebase soit prêt
+setTimeout(init, 800);
 </script>
 
 <style>
