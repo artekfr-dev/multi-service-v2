@@ -589,12 +589,20 @@ function generatePDF(cid){
     </tr>`).join('');
 
     let photosAvantHTML='';
-    if((m.photosAvant||[]).length>0){
-      photosAvantHTML=`<div class="photos-section"><div class="photos-label">Photos avant</div><div class="photos-grid">${m.photosAvant.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+    const pav=m.photosAvant||[];
+    if(pav.length>0){
+      photosAvantHTML=`<div class="photos-section"><div class="photos-label">Photos avant (${pav.length})</div><div class="photos-grid">${pav.map(src=>`<img src="${src}" onerror="this.style.display='none'">`).join('')}</div></div>`;
     }
     let photosApresHTML='';
-    if((m.photosApres||[]).length>0){
-      photosApresHTML=`<div class="photos-section"><div class="photos-label">Photos après</div><div class="photos-grid">${m.photosApres.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+    const pap=m.photosApres||[];
+    if(pap.length>0){
+      photosApresHTML=`<div class="photos-section"><div class="photos-label">Photos après (${pap.length})</div><div class="photos-grid">${pap.map(src=>`<img src="${src}" onerror="this.style.display='none'">`).join('')}</div></div>`;
+    }
+    // Photos par ligne de travaux
+    let photosLignesHTML='';
+    const lignesAvecPhotos=(m.lignes||[]).filter(l=>(l.photosLigne||[]).length>0);
+    if(lignesAvecPhotos.length>0){
+      photosLignesHTML=`<div class="photos-section"><div class="photos-label">Photos des travaux</div><div class="photos-grid">${lignesAvecPhotos.map(l=>(l.photosLigne||[]).map(src=>`<img src="${src}" onerror="this.style.display='none'">`).join('')).join('')}</div></div>`;
     }
 
     missionsHTML+=`<div class="mission">
@@ -617,7 +625,7 @@ function generatePDF(cid){
         <div class="total-grand"><span>Total mission</span><span>${fmn(tot)} €</span></div>
       </div>`:''}
       ${m.compteRendu?`<div class="compte-rendu"><div class="cr-label">Compte rendu</div>${m.compteRendu}</div>`:''}
-      ${photosAvantHTML}${photosApresHTML}
+      ${photosAvantHTML}${photosApresHTML}${photosLignesHTML}
     </div>`;
   });
 
@@ -628,7 +636,7 @@ function generatePDF(cid){
           <div class="company-name">${MSH.name}</div>
           <div class="company-info">
             ${MSH.contact} — ${MSH.activite}<br>
-            📞 ${MSH.tel} &nbsp;·&nbsp; ✉️ ${MSH.mail}<br>
+            <span style="color:#fff!important">📞 ${MSH.tel}</span> &nbsp;·&nbsp; <span style="color:#fff!important">✉️ ${MSH.mail}</span><br>
             📍 ${MSH.adresse}, ${MSH.cp} ${MSH.ville}
           </div>
         </div>
@@ -651,7 +659,8 @@ function generatePDF(cid){
     </div>
   `;
 
-  // Ouvrir dans une nouvelle page pour partage/impression sur iPhone
+  // Collecter toutes les photos pour les passer dans la nouvelle fenêtre
+  // Les images sont déjà dans le html via les src base64, on ouvre directement
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8">
@@ -664,7 +673,7 @@ function generatePDF(cid){
       .pdf-wrap{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
       .header{background:#1a3a6b;padding:20px;display:flex;justify-content:space-between;align-items:flex-start}
       .company-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
-      .company-info{font-size:11px;color:rgba(255,255,255,.8);line-height:1.7}
+      .company-info{font-size:11px;color:rgba(255,255,255,.8);line-height:1.7} .company-info a{color:#fff!important;text-decoration:none}
       .doc-info{text-align:right;color:rgba(255,255,255,.9)}
       .doc-title{font-size:14px;font-weight:700;margin-bottom:4px}
       .doc-sub{font-size:11px;color:rgba(255,255,255,.7);line-height:1.6}
@@ -694,7 +703,7 @@ function generatePDF(cid){
       .photos-section{padding:10px 14px;border-top:1px solid #f0f0f0}
       .photos-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.4px;margin-bottom:8px}
       .photos-grid{display:flex;flex-wrap:wrap;gap:6px}
-      .photos-grid img{width:100px;height:75px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5}
+      .photos-grid img{width:130px;height:100px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5;display:block}
       .grand-total{margin:16px;background:#1a3a6b;color:#fff;padding:14px 16px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
       .gt-label{font-size:12px;opacity:.8;margin-bottom:2px}
       .gt-amount{font-size:20px;font-weight:700}
