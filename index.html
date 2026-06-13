@@ -590,65 +590,65 @@ function generatePDF(cid){
 
     let photosAvantHTML='';
     if((m.photosAvant||[]).length>0){
-      photosAvantHTML=`<div class="pdf-photos"><h4>Photos avant</h4><div class="pdf-photos-grid">${m.photosAvant.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+      photosAvantHTML=`<div class="photos-section"><div class="photos-label">Photos avant</div><div class="photos-grid">${m.photosAvant.map(src=>`<img src="${src}">`).join('')}</div></div>`;
     }
     let photosApresHTML='';
     if((m.photosApres||[]).length>0){
-      photosApresHTML=`<div class="pdf-photos"><h4>Photos après</h4><div class="pdf-photos-grid">${m.photosApres.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+      photosApresHTML=`<div class="photos-section"><div class="photos-label">Photos après</div><div class="photos-grid">${m.photosApres.map(src=>`<img src="${src}">`).join('')}</div></div>`;
     }
 
-    missionsHTML+=`<div class="pdf-mission">
-      <div class="pdf-mission-header">Mission #${m.id} — ${m.chantier||'—'}</div>
-      <div class="pdf-mission-info">
-        <div><div class="pdf-info-label">Date</div><div class="pdf-info-value">${fd(m.date)}</div></div>
-        <div><div class="pdf-info-label">Adresse</div><div class="pdf-info-value">${m.adresse||'—'}</div></div>
-        ${m.dateExec?`<div><div class="pdf-info-label">Date d'exécution</div><div class="pdf-info-value">${fd(m.dateExec)}</div></div>`:''}
-        <div><div class="pdf-info-label">Statut</div><div class="pdf-info-value">${m.etat||'—'}</div></div>
+    missionsHTML+=`<div class="mission">
+      <div class="mission-header">
+        <span>Mission #${m.id} — ${m.chantier||'—'}</span>
+        <span class="mission-badge">${m.etat||'—'}</span>
       </div>
-      ${lignes.length>0?`<table class="pdf-ligne-table">
+      <div class="mission-info">
+        <div class="info-cell"><div class="info-label">Date</div><div class="info-value">${fd(m.date)}</div></div>
+        <div class="info-cell"><div class="info-label">Adresse</div><div class="info-value">${m.adresse||'—'}</div></div>
+        ${m.dateExec?`<div class="info-cell"><div class="info-label">Date d'exécution</div><div class="info-value">${fd(m.dateExec)}</div></div><div class="info-cell"></div>`:''}
+      </div>
+      ${lignes.length>0?`<table>
         <thead><tr><th>Type</th><th>Désignation</th><th>Qté</th><th>Prix</th><th>Total</th></tr></thead>
         <tbody>${lignesRows}</tbody>
       </table>
-      <div class="pdf-totaux">
-        <div class="pdf-total-line">Total Prestation : ${fmn(tp)} €</div>
-        <div class="pdf-total-line">Total Vente : ${fmn(tv)} €</div>
-        <div class="pdf-total-grand">Total mission : ${fmn(tot)} €</div>
+      <div class="mission-totaux">
+        <div class="total-line"><span>Total Prestation</span><span>${fmn(tp)} €</span></div>
+        <div class="total-line"><span>Total Vente</span><span>${fmn(tv)} €</span></div>
+        <div class="total-grand"><span>Total mission</span><span>${fmn(tot)} €</span></div>
       </div>`:''}
-      ${m.compteRendu?`<div style="padding:12px 16px;font-size:13px;color:#555;border-top:1px solid #f0f0f0"><strong>Compte rendu :</strong> ${m.compteRendu}</div>`:''}
+      ${m.compteRendu?`<div class="compte-rendu"><div class="cr-label">Compte rendu</div>${m.compteRendu}</div>`:''}
       ${photosAvantHTML}${photosApresHTML}
     </div>`;
   });
 
   const html=`
-    <div class="pdf-header">
-      <div class="pdf-logo-zone">
+    <div class="pdf-wrap">
+      <div class="header">
         <div>
-          <div class="pdf-company">
-            <h1>${MSH.name}</h1>
-            <p>${MSH.contact} — ${MSH.activite}</p>
-            <p>📞 ${MSH.tel} &nbsp; ✉️ ${MSH.mail}</p>
-            <p>📍 ${MSH.adresse}, ${MSH.cp} ${MSH.ville}</p>
+          <div class="company-name">${MSH.name}</div>
+          <div class="company-info">
+            ${MSH.contact} — ${MSH.activite}<br>
+            📞 ${MSH.tel} &nbsp;·&nbsp; ✉️ ${MSH.mail}<br>
+            📍 ${MSH.adresse}, ${MSH.cp} ${MSH.ville}
           </div>
         </div>
+        <div class="doc-info">
+          <div class="doc-title">Récapitulatif</div>
+          <div class="doc-sub">Date : ${date}<br>${missions.length} mission${missions.length>1?'s':''}</div>
+        </div>
       </div>
-      <div style="text-align:right;color:#888;font-size:13px">
-        <div style="font-size:16px;font-weight:700;color:#1a3a6b">Récapitulatif</div>
-        <div>Date : ${date}</div>
-        <div>${missions.length} mission${missions.length>1?'s':''}</div>
+      <div class="client-box">
+        <div class="client-label">Client</div>
+        <div class="client-name">${cdn(cl)}</div>
+        ${cl.mobile||cl.mail?`<div class="client-sub">${cl.mobile?'📞 '+cl.mobile:''}${cl.mobile&&cl.mail?' &nbsp;·&nbsp; ':''} ${cl.mail?'✉️ '+cl.mail:''}</div>`:''}
       </div>
+      ${missionsHTML}
+      <div class="grand-total">
+        <div><div class="gt-label">Total général</div></div>
+        <div class="gt-amount">${totalGlobal.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+      </div>
+      <div class="footer">${MSH.name} — ${MSH.adresse}, ${MSH.cp} ${MSH.ville} — ${MSH.tel} — ${MSH.mail}</div>
     </div>
-    <div class="pdf-client-box">
-      <h3>Client</h3>
-      <p>${cdn(cl)}</p>
-      ${cl.mobile?`<p style="font-size:13px;color:#555;margin-top:4px">📞 ${cl.mobile}</p>`:''}
-      ${cl.mail?`<p style="font-size:13px;color:#555">✉️ ${cl.mail}</p>`:''}
-    </div>
-    ${missionsHTML}
-    <div class="pdf-grand-total">
-      <span>Total général</span>
-      <span>${totalGlobal.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
-    </div>
-    <div class="pdf-footer">${MSH.name} — ${MSH.adresse}, ${MSH.cp} ${MSH.ville} — ${MSH.tel} — ${MSH.mail}</div>
   `;
 
   // Ouvrir dans une nouvelle page pour partage/impression sur iPhone
@@ -659,35 +659,47 @@ function generatePDF(cid){
     <title>Récapitulatif ${cdn(cl)}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:-apple-system,Arial,sans-serif;font-size:14px;color:#1c1c1e;background:#fff;padding:20px}
-      .header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #1a3a6b;padding-bottom:16px;margin-bottom:20px}
-      .company-name{font-size:20px;font-weight:700;color:#1a3a6b;margin-bottom:4px}
-      .company-info{font-size:12px;color:#555;line-height:1.6}
-      .doc-info{text-align:right;font-size:12px;color:#888}
-      .doc-title{font-size:15px;font-weight:700;color:#1a3a6b;margin-bottom:4px}
-      .client-box{background:#f5f7ff;border-left:3px solid #1a3a6b;padding:10px 14px;margin-bottom:16px;border-radius:0 6px 6px 0}
-      .client-label{font-size:11px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:4px}
-      .client-name{font-size:15px;font-weight:600;color:#1a3a6b}
-      .mission{border:1px solid #e5e5e5;border-radius:8px;margin-bottom:14px;overflow:hidden}
-      .mission-header{background:#1a3a6b;color:#fff;padding:8px 14px;font-size:13px;font-weight:600}
-      .mission-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px}
-      .info-label{color:#888;font-size:10px;text-transform:uppercase;font-weight:600;margin-bottom:2px}
-      .info-value{font-weight:500}
-      table{width:100%;border-collapse:collapse;font-size:12px;margin:0}
-      th{background:#f5f7ff;color:#1a3a6b;padding:7px 12px;text-align:left;font-size:11px;font-weight:600;border-bottom:1px solid #e5e5e5}
-      td{padding:7px 12px;border-bottom:1px solid #f5f5f5}
-      tr:last-child td{border-bottom:none}
-      .mission-totaux{padding:8px 14px;background:#fafafa;text-align:right;font-size:12px}
-      .total-line{color:#555;margin-bottom:3px}
-      .total-grand{font-size:14px;font-weight:700;color:#1a3a6b;border-top:1px solid #ddd;padding-top:6px;margin-top:4px}
-      .compte-rendu{padding:10px 14px;font-size:12px;color:#555;border-top:1px solid #f0f0f0}
-      .photos-section{padding:10px 14px;border-top:1px solid #f0f0f0}
-      .photos-label{font-size:11px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:8px}
-      .photos-grid{display:flex;flex-wrap:wrap;gap:6px}
-      .photos-grid img{width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5}
-      .grand-total{background:#1a3a6b;color:#fff;padding:14px;border-radius:8px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700}
-      .footer{margin-top:20px;border-top:1px solid #e5e5e5;padding-top:12px;text-align:center;font-size:11px;color:#888}
+      body{font-family:-apple-system,Arial,sans-serif;font-size:13px;color:#1c1c1e;background:#f5f5f5;padding:16px}
       .share-btn{display:block;width:100%;padding:14px;background:#007AFF;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;margin-bottom:16px;cursor:pointer;font-family:inherit}
+      .pdf-wrap{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+      .header{background:#1a3a6b;padding:20px;display:flex;justify-content:space-between;align-items:flex-start}
+      .company-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+      .company-info{font-size:11px;color:rgba(255,255,255,.8);line-height:1.7}
+      .doc-info{text-align:right;color:rgba(255,255,255,.9)}
+      .doc-title{font-size:14px;font-weight:700;margin-bottom:4px}
+      .doc-sub{font-size:11px;color:rgba(255,255,255,.7);line-height:1.6}
+      .client-box{margin:16px;background:#f5f7ff;border-left:3px solid #1a3a6b;padding:10px 14px;border-radius:0 8px 8px 0}
+      .client-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
+      .client-name{font-size:15px;font-weight:700;color:#1a3a6b;margin-bottom:3px}
+      .client-sub{font-size:12px;color:#555}
+      .mission{margin:0 16px 14px;border:1px solid #e5e5e5;border-radius:10px;overflow:hidden}
+      .mission-header{background:#1a3a6b;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+      .mission-badge{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-size:11px}
+      .mission-info{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f0f0f0}
+      .info-cell{padding:8px 14px;border-right:1px solid #f0f0f0}
+      .info-cell:nth-child(even){border-right:none}
+      .info-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:2px;letter-spacing:.4px}
+      .info-value{font-size:13px;font-weight:500;color:#1c1c1e}
+      table{width:100%;border-collapse:collapse;font-size:12px}
+      th{background:#f8f9ff;color:#1a3a6b;padding:8px 14px;text-align:left;font-size:11px;font-weight:700;border-bottom:1px solid #e5e5e5;text-transform:uppercase;letter-spacing:.4px}
+      th:last-child{text-align:right}
+      td{padding:8px 14px;border-bottom:1px solid #f5f5f5;color:#1c1c1e}
+      td:last-child{text-align:right;font-weight:600;color:#065f46}
+      tr:last-child td{border-bottom:none}
+      .mission-totaux{padding:10px 14px;background:#fafafa;border-top:1px solid #f0f0f0}
+      .total-line{display:flex;justify-content:space-between;font-size:12px;color:#555;padding:2px 0}
+      .total-grand{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#1a3a6b;border-top:1px solid #ddd;padding-top:8px;margin-top:6px}
+      .compte-rendu{padding:10px 14px;font-size:12px;color:#555;border-top:1px solid #f0f0f0;background:#fffdf0}
+      .cr-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+      .photos-section{padding:10px 14px;border-top:1px solid #f0f0f0}
+      .photos-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.4px;margin-bottom:8px}
+      .photos-grid{display:flex;flex-wrap:wrap;gap:6px}
+      .photos-grid img{width:100px;height:75px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5}
+      .grand-total{margin:16px;background:#1a3a6b;color:#fff;padding:14px 16px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+      .gt-label{font-size:12px;opacity:.8;margin-bottom:2px}
+      .gt-amount{font-size:20px;font-weight:700}
+      .footer{padding:14px 16px;text-align:center;font-size:11px;color:#888;border-top:1px solid #f0f0f0}
+      @media print{.share-btn{display:none}.pdf-wrap{box-shadow:none}}
     </style>
   </head><body>
     <button class="share-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
