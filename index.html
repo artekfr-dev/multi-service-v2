@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Multi-Service">
-<title>Multi-Service Home</title>
+<meta name="apple-mobile-web-app-title" content="Multi Services Home">
+<title>Multi Services Home</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;background:#f2f2f7;color:#1c1c1e;min-height:100vh}
@@ -59,21 +60,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
 .ios-btn-secondary{background:#fff;color:#007AFF}
 .ios-btn-danger{background:#fff;color:#ff3b30}
 .ios-btn-orange{background:#ff9500;color:#fff}
+.ios-btn-purple{background:#534AB7;color:#fff}
 .totaux{background:#fff;border-radius:12px;padding:14px 16px}
 .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:15px}
 .tot-grand{font-weight:700;font-size:17px;color:#007AFF;border-top:0.5px solid #e5e5ea;padding-top:10px;margin-top:6px}
-.pzone{display:flex;flex-direction:column;gap:6px;padding:10px 0}
-.photo-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #007AFF;border-radius:10px;background:#fff;color:#007AFF;font-size:14px;cursor:pointer;font-family:inherit}
-.pprev{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.pthumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid #e5e5ea;flex-shrink:0}
+
+/* Zone photo améliorée */
+.pzone{display:flex;flex-direction:column;gap:8px;padding:10px 0}
+.photo-main-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1.5px dashed #007AFF;border-radius:12px;background:#f0f7ff;color:#007AFF;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;width:100%}
+.pprev{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pthumb{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1px solid #e5e5ea;flex-shrink:0}
 .pthumb img{width:100%;height:100%;object-fit:cover;display:block}
-.pdel{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer}
+.pdel{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+
 .action-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:200;padding:0 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
 .action-group{background:#fff;border-radius:14px;overflow:hidden;margin-bottom:8px}
-.action-item{display:flex;align-items:center;justify-content:center;padding:14px;font-size:17px;cursor:pointer;border-bottom:0.5px solid #e5e5ea;color:#007AFF}
+.action-item{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;font-size:17px;cursor:pointer;border-bottom:0.5px solid #e5e5ea;color:#007AFF}
 .action-item:last-child{border-bottom:none}
-.action-cancel{background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:14px;font-size:17px;font-weight:600;cursor:pointer;color:#007AFF}
+.action-item:active{background:#f2f2f7}
+.action-cancel{background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:16px;font-size:17px;font-weight:600;cursor:pointer;color:#ff3b30}
 .action-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:190}
+
 .status-bar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;background:#fff;border-radius:12px}
 .status-btn{flex:1;min-width:80px;padding:8px 4px;border-radius:8px;border:1.5px solid #e5e5ea;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#8e8e93;text-align:center}
 .status-btn.active-wt{background:#fef3c7;border-color:#92400e;color:#92400e}
@@ -83,6 +90,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
 .suivi-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px}
 .suivi-date{font-size:12px;color:#8e8e93;margin-bottom:4px}
 .suivi-note{font-size:15px}
+
+/* Checkbox missions pour PDF */
+.mission-check{display:flex;align-items:center;padding:12px 16px;border-bottom:0.5px solid #f2f2f7;gap:12px;background:#fff}
+.mission-check:last-child{border-bottom:none}
+.mission-check input[type=checkbox]{width:22px;height:22px;accent-color:#007AFF;flex-shrink:0}
+
+/* PDF template caché */
+#pdf-template{display:none;position:fixed;top:-9999px;left:-9999px;width:800px;background:#fff;padding:40px;font-family:Arial,sans-serif}
+.pdf-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a3a6b;padding-bottom:20px;margin-bottom:24px}
+.pdf-logo-zone{display:flex;align-items:center;gap:16px}
+.pdf-logo{width:80px;height:80px;object-fit:contain}
+.pdf-company{color:#1a3a6b}
+.pdf-company h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.pdf-company p{font-size:13px;color:#555;margin:2px 0}
+.pdf-client-box{background:#f5f7ff;border-left:4px solid #1a3a6b;padding:14px 18px;margin-bottom:20px;border-radius:0 8px 8px 0}
+.pdf-client-box h3{font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.pdf-client-box p{font-size:16px;font-weight:600;color:#1a3a6b}
+.pdf-mission{border:1px solid #e5e5e5;border-radius:8px;margin-bottom:16px;overflow:hidden}
+.pdf-mission-header{background:#1a3a6b;color:#fff;padding:10px 16px;font-size:14px;font-weight:600}
+.pdf-mission-info{padding:12px 16px;border-bottom:1px solid #f0f0f0;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.pdf-info-label{color:#888;font-size:11px;text-transform:uppercase}
+.pdf-info-value{font-weight:500;color:#1c1c1e}
+.pdf-ligne-table{width:100%;border-collapse:collapse;font-size:13px}
+.pdf-ligne-table th{background:#f5f7ff;color:#1a3a6b;padding:8px 12px;text-align:left;font-size:12px;font-weight:600}
+.pdf-ligne-table td{padding:8px 12px;border-bottom:1px solid #f0f0f0}
+.pdf-ligne-table tr:last-child td{border-bottom:none}
+.pdf-totaux{padding:12px 16px;background:#f9f9f9;text-align:right}
+.pdf-total-line{font-size:13px;color:#555;margin-bottom:4px}
+.pdf-total-grand{font-size:16px;font-weight:700;color:#1a3a6b;margin-top:6px;border-top:1px solid #ddd;padding-top:8px}
+.pdf-photos{padding:12px 16px}
+.pdf-photos h4{font-size:12px;color:#888;text-transform:uppercase;margin-bottom:8px}
+.pdf-photos-grid{display:flex;flex-wrap:wrap;gap:8px}
+.pdf-photos-grid img{width:160px;height:120px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e5}
+.pdf-footer{margin-top:30px;border-top:1px solid #e5e5e5;padding-top:16px;text-align:center;font-size:12px;color:#888}
+.pdf-grand-total{background:#1a3a6b;color:#fff;padding:16px 20px;border-radius:8px;margin-top:16px;display:flex;justify-content:space-between;align-items:center}
+.pdf-grand-total span{font-size:18px;font-weight:700}
 </style>
 </head>
 <body>
@@ -102,14 +145,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
     <div class="bnav-item" onclick="go('recap')" id="bn-recap"><i class="ti ti-report-money"></i><span>Récap</span></div>
   </div>
 </div>
+<div id="pdf-template"></div>
+
 <script>
 const SK='msa_v2';
+const MSH={name:'Multi Services Home',contact:'Arthur TEKEHYAN',activite:'Tous Services',tel:'06 52 71 91 32',mail:'msh.antibes@gmail.com',adresse:'4, Avenue Gambetta',cp:'06600',ville:'ANTIBES'};
+
 function load(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}return{clients:[],missions:[],suivis:[],cid:1,mid:1,sid:1};}
 function save(){try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}}
 let D=load();
 let linePhotos={};
 let lignesTemp=[];
 let ligneIdx=0;
+let missionPhotosAvant={};
+let missionPhotosApres={};
 
 function cdn(c){if(!c)return'—';if(c.type==='Professionnel')return c.raison||'—';return[c.civ,c.prenom,c.nom].filter(Boolean).join(' ')||'—';}
 function ini(c){if(!c)return'?';return cdn(c).split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();}
@@ -209,27 +258,33 @@ function bRecap(selM,selC){
     h+=`<div class="section-header" style="margin:16px 0 4px">${cdn(cl)} · ${sT.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div><div class="section">`;
     ms.forEach(m=>{h+=`<div class="cell"><div class="cell-content"><div class="cell-title">${m.chantier||'—'}</div>${m.adresse?`<div class="cell-sub">${m.adresse}</div>`:''}</div><div class="cell-right">${eB(m.etat)}<span style="font-weight:600">${fm(calcTotal(m))}</span></div></div>`;});
     h+=`</div>`;
+    h+=`<button class="ios-btn ios-btn-purple" style="margin:8px 0" onclick="openPDFSelector(${cid})">📄 Générer PDF pour ${cdn(cl)}</button>`;
   });
   h+=`<div class="totaux" style="margin-top:12px"><div class="tot-row tot-grand"><span>Total du mois</span><span>${tot.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span></div></div>`;
   return h;
 }
 
-function photoSection(pid,arr,label){
+/* ===== PHOTO ZONE - UN SEUL BOUTON ===== */
+function photoZone(pid,arr,label){
   return`<div class="pzone">
-    <button type="button" class="photo-btn" onclick="showPhotoMenu('${pid}')">📷 ${label||'Ajouter une photo'}</button>
+    <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}')">
+      📷 ${label||'Ajouter des photos'}
+    </button>
     <input type="file" id="inp-${pid}-cam" accept="image/*" capture="environment" style="display:none" onchange="onPhoto('${pid}',this)">
     <input type="file" id="inp-${pid}-gal" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <input type="file" id="inp-${pid}-file" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <div class="pprev" id="prev-${pid}">${thumbs(pid,arr)}</div>
   </div>`;
 }
+
 function showPhotoMenu(pid){
-  const ol=document.createElement('div');ol.className='action-overlay';ol.id='ao-'+pid;ol.onclick=()=>{ol.remove();const b=document.getElementById('as-'+pid);if(b)b.remove();};
+  const ol=document.createElement('div');ol.className='action-overlay';ol.id='ao-'+pid;
+  ol.onclick=()=>{ol.remove();const b=document.getElementById('as-'+pid);if(b)b.remove();};
   document.body.appendChild(ol);
   const as=document.createElement('div');as.className='action-sheet';as.id='as-'+pid;
   as.innerHTML=`<div class="action-group">
     <div class="action-item" onclick="trigP('${pid}','cam');closeAS('${pid}')">📷 Appareil photo</div>
-    <div class="action-item" onclick="trigP('${pid}','gal');closeAS('${pid}')">🖼️ Galerie photos</div>
+    <div class="action-item" onclick="trigP('${pid}','gal');closeAS('${pid}')">🖼️ Photothèque</div>
     <div class="action-item" onclick="trigP('${pid}','file');closeAS('${pid}')">📁 Fichiers</div>
   </div>
   <div class="action-cancel" onclick="closeAS('${pid}')">Annuler</div>`;
@@ -237,15 +292,21 @@ function showPhotoMenu(pid){
 }
 function closeAS(pid){const a=document.getElementById('ao-'+pid);const b=document.getElementById('as-'+pid);if(a)a.remove();if(b)b.remove();}
 function trigP(pid,type){document.getElementById(`inp-${pid}-${type}`).click();}
+function getPhotos(pid){
+  if(pid.startsWith('avant-'))return missionPhotosAvant[pid]||(missionPhotosAvant[pid]=[]);
+  if(pid.startsWith('apres-'))return missionPhotosApres[pid]||(missionPhotosApres[pid]=[]);
+  return linePhotos[pid]||(linePhotos[pid]=[]);
+}
 function onPhoto(pid,inp){
-  if(!linePhotos[pid])linePhotos[pid]=[];
-  Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{linePhotos[pid].push(e.target.result);upPrev(pid);};r.readAsDataURL(f);});
+  const arr=getPhotos(pid);
+  Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{arr.push(e.target.result);upPrev(pid);};r.readAsDataURL(f);});
   inp.value='';
 }
 function thumbs(pid,arr){return(arr||[]).map((src,i)=>`<div class="pthumb"><img src="${src}" alt="photo"><button class="pdel" onclick="rmP('${pid}',${i})">✕</button></div>`).join('');}
-function upPrev(pid){const el=document.getElementById(`prev-${pid}`);if(el)el.innerHTML=thumbs(pid,linePhotos[pid]||[]);}
-function rmP(pid,i){if(linePhotos[pid])linePhotos[pid].splice(i,1);upPrev(pid);}
+function upPrev(pid){const el=document.getElementById(`prev-${pid}`);if(el)el.innerHTML=thumbs(pid,getPhotos(pid));}
+function rmP(pid,i){getPhotos(pid).splice(i,1);upPrev(pid);}
 
+/* ===== CLIENTS ===== */
 function openClient(id){
   const c=id?D.clients.find(x=>x.id===id):null;
   const dt=c?c.type:'Particulier';
@@ -283,7 +344,8 @@ function saveClient(id){
 }
 function delClient(id){if(confirm('Supprimer ce client ?')){D.clients=D.clients.filter(c=>c.id!==id);save();closeSheet();go('clients');}}
 
-function newLigne(){return{id:'l'+(ligneIdx++),type:'Prestation',designation:'',qte:1,prix:'',photosAvant:[],photosApres:[]};}
+/* ===== MISSIONS ===== */
+function newLigne(){return{id:'l'+(ligneIdx++),type:'Prestation',designation:'',qte:1,prix:''};}
 function renderLignes(){
   const c=document.getElementById('lignes-container');if(!c)return;
   c.innerHTML=lignesTemp.map((l,i)=>`
@@ -304,13 +366,12 @@ function renderLignes(){
       <div style="padding-left:8px"><div class="form-label">Prix €</div><input class="form-input" type="number" value="${l.prix||''}" placeholder="0.00" step="0.01" onchange="updL('${l.id}','prix',this.value)" style="text-align:right"></div>
     </div>
     <div class="form-cell"><div class="form-label" style="color:#065f46;padding-bottom:8px">Total : ${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</div></div>
-    <div class="form-cell">${photoSection('av-'+l.id,linePhotos['av-'+l.id]||[],'Photo avant')}</div>
   </div>`).join('');
   updateTotals();
 }
 function updL(id,key,val){const l=lignesTemp.find(x=>x.id===id);if(!l)return;l[key]=val;updateTotals();}
-function addLigne(){const l=newLigne();lignesTemp.push(l);linePhotos['av-'+l.id]=[];renderLignes();}
-function delLigne(id){lignesTemp=lignesTemp.filter(l=>l.id!==id);delete linePhotos['av-'+id];renderLignes();}
+function addLigne(){const l=newLigne();lignesTemp.push(l);renderLignes();}
+function delLigne(id){lignesTemp=lignesTemp.filter(l=>l.id!==id);renderLignes();}
 function updateTotals(){
   let tp=0,tv=0;
   lignesTemp.forEach(l=>{const t=(parseFloat(l.qte)||0)*(parseFloat(l.prix)||0);if(l.type==='Prestation')tp+=t;else tv+=t;});
@@ -321,8 +382,10 @@ function updateTotals(){
 function openMission(id){
   const m=id?D.missions.find(x=>x.id===id):null;
   lignesTemp=m&&m.lignes?m.lignes.map(l=>({...l})):[newLigne()];
-  linePhotos={};
-  lignesTemp.forEach(l=>{linePhotos['av-'+l.id]=[...(l.photosAvant||[])];});
+  missionPhotosAvant={};
+  const pid='avant-new';
+  missionPhotosAvant[pid]=m?[...(m.photosAvant||[])]:[];
+
   sheet(`${m?'Modifier':'Nouvelle'} mission`,`
     <div class="form-section">
       <div class="form-cell"><div class="form-label">Client *</div><select class="form-select" id="f-cid"><option value="">— Choisir —</option>${D.clients.map(c=>`<option value="${c.id}" ${m&&m.cid===c.id?'selected':''}>${cdn(c)}</option>`).join('')}</select></div>
@@ -336,7 +399,11 @@ function openMission(id){
         <option ${m&&m.etat==='Payée'?'selected':''}>Payée</option>
       </select></div>
     </div>
-    <div style="font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;padding:8px 4px 4px">Travaux</div>
+
+    <div class="section-header" style="margin:12px 0 6px">📷 Photos avant le chantier</div>
+    <div class="form-section"><div class="form-cell">${photoZone('avant-new',missionPhotosAvant['avant-new'],'Ajouter photos avant')}</div></div>
+
+    <div style="font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;padding:12px 4px 4px">Travaux</div>
     <div id="lignes-container"></div>
     <button type="button" class="ios-btn ios-btn-secondary" style="border:1px dashed #007AFF;margin-bottom:4px" onclick="addLigne()">+ Ajouter une ligne</button>
     <div class="totaux" id="totaux-display"></div>
@@ -348,26 +415,40 @@ function openMission(id){
   `);
   setTimeout(()=>{renderLignes();},50);
 }
+
 function saveMission(id){
   const cid=parseInt(document.getElementById('f-cid').value);
   const chantier=document.getElementById('f-ch').value.trim();
   if(!cid||!chantier){alert('Client et chantier obligatoires');return;}
-  const lignes=lignesTemp.map(l=>({...l,photosAvant:[...(linePhotos['av-'+l.id]||[])]}));
+  const lignes=lignesTemp.map(l=>({...l}));
   const m=id?D.missions.find(x=>x.id===id):null;
-  const obj={id:id||D.mid++,cid,date:document.getElementById('f-date').value,chantier,adresse:document.getElementById('f-adr').value.trim(),etat:document.getElementById('f-et').value,lignes,comment:document.getElementById('f-comment').value.trim(),
-    photosApres:m?m.photosApres||[]:[], compteRendu:m?m.compteRendu||'':''};
+  const obj={
+    id:id||D.mid++,cid,
+    date:document.getElementById('f-date').value,
+    chantier,
+    adresse:document.getElementById('f-adr').value.trim(),
+    etat:document.getElementById('f-et').value,
+    lignes,
+    comment:document.getElementById('f-comment').value.trim(),
+    photosAvant:[...(missionPhotosAvant['avant-new']||[])],
+    photosApres:m?m.photosApres||[]:[], 
+    compteRendu:m?m.compteRendu||'':'',
+    dateExec:m?m.dateExec||'':''
+  };
   if(id){const i=D.missions.findIndex(m=>m.id===id);D.missions[i]=obj;}else D.missions.push(obj);
-  linePhotos={};lignesTemp=[];save();closeSheet();go('missions');
+  missionPhotosAvant={};lignesTemp=[];save();closeSheet();go('missions');
 }
 function delMission(id){if(confirm('Supprimer ?')){D.missions=D.missions.filter(m=>m.id!==id);D.suivis=D.suivis.filter(s=>s.mid!==id);save();closeSheet();go('missions');}}
 
+/* ===== DÉTAIL MISSION ===== */
 function openDetail(id){
   const m=D.missions.find(x=>x.id===id);if(!m)return;
   const cl=D.clients.find(c=>c.id===m.cid);
   const lignes=m.lignes||[];
   const tp=calcTP(m),tv=calcTV(m),tot=calcTotal(m);
   const ns=D.suivis.filter(s=>s.mid===id);
-  linePhotos['apres-'+id]=m.photosApres?[...m.photosApres]:[];
+  const apresKey='apres-'+id;
+  missionPhotosApres[apresKey]=m.photosApres?[...m.photosApres]:[];
 
   sheet(`Mission #${m.id}`,`
     <div class="form-section">
@@ -386,17 +467,22 @@ function openDetail(id){
     </div>
 
     ${lignes.length>0?`
-    <div class="section-header" style="margin:14px 0 4px">Travaux · Total : ${fm(tot)}</div>
+    <div class="section-header" style="margin:14px 0 4px">Travaux · ${fm(tot)}</div>
     ${lignes.map(l=>`<div class="form-section" style="margin-bottom:8px">
       <div class="cell"><span class="badge ${l.type==='Prestation'?'bgo':'bpy'}">${l.type}</span>
-      <div class="cell-content" style="margin-left:10px"><div class="cell-title">${l.designation||'—'}</div>
-      <div class="cell-sub">${l.qte} × ${l.prix?parseFloat(l.prix).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'} = <strong>${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</strong></div></div></div>
-      ${(l.photosAvant||[]).length>0?`<div class="cell" style="flex-direction:column;align-items:flex-start;gap:6px"><div class="form-label">Photos avant</div><div class="pprev">${l.photosAvant.map(src=>`<div class="pthumb"><img src="${src}" alt="av"></div>`).join('')}</div></div>`:''}
+      <div class="cell-content" style="margin-left:10px">
+        <div class="cell-title">${l.designation||'—'}</div>
+        <div class="cell-sub">${l.qte} × ${l.prix?parseFloat(l.prix).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'} = <strong>${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</strong></div>
+      </div></div>
     </div>`).join('')}
     <div class="totaux"><div class="tot-row"><span>Total Prestation</span><span>${fmn(tp)} €</span></div><div class="tot-row"><span>Total Vente</span><span>${fmn(tv)} €</span></div><div class="tot-row tot-grand"><span>Total Général</span><span>${fmn(tot)} €</span></div></div>`:''}
 
+    ${(m.photosAvant||[]).length>0?`
+    <div class="section-header" style="margin:14px 0 6px">Photos avant</div>
+    <div class="form-section"><div class="form-cell"><div class="pprev" style="padding:10px 0">${m.photosAvant.map(src=>`<div class="pthumb"><img src="${src}" alt="avant"></div>`).join('')}</div></div></div>`:''}
+
     <div class="section-header" style="margin:14px 0 6px">📷 Photos après le chantier</div>
-    <div class="form-section"><div class="form-cell">${photoSection('apres-'+id,m.photosApres||[],'Ajouter photos après')}</div></div>
+    <div class="form-section"><div class="form-cell">${photoZone(apresKey,missionPhotosApres[apresKey],'Ajouter photos après')}</div></div>
 
     <div class="section-header" style="margin:14px 0 6px">📝 Compte rendu</div>
     <div class="form-section">
@@ -420,27 +506,22 @@ function setEtat(id,etat){
   const m=D.missions.find(x=>x.id===id);if(!m)return;
   m.etat=etat;save();
   const bar=document.getElementById('status-bar-'+id);
-  if(bar){
-    bar.querySelectorAll('.status-btn').forEach(btn=>{
-      btn.className='status-btn';
-      if(btn.textContent==='En attente'&&etat==='En attente')btn.classList.add('active-wt');
-      if(btn.textContent==='En cours'&&etat==='En cours')btn.classList.add('active-go');
-      if(btn.textContent==='Terminée'&&etat==='Terminée')btn.classList.add('active-dn');
-      if(btn.textContent==='Payée'&&etat==='Payée')btn.classList.add('active-py');
-    });
-  }
+  if(bar){bar.querySelectorAll('.status-btn').forEach(btn=>{
+    btn.className='status-btn';
+    if(btn.textContent==='En attente'&&etat==='En attente')btn.classList.add('active-wt');
+    if(btn.textContent==='En cours'&&etat==='En cours')btn.classList.add('active-go');
+    if(btn.textContent==='Terminée'&&etat==='Terminée')btn.classList.add('active-dn');
+    if(btn.textContent==='Payée'&&etat==='Payée')btn.classList.add('active-py');
+  });}
 }
 
 function saveCompteRendu(id){
   const m=D.missions.find(x=>x.id===id);if(!m)return;
   m.dateExec=document.getElementById('cr-date-'+id).value;
   m.compteRendu=document.getElementById('cr-comment-'+id).value.trim();
-  m.photosApres=[...(linePhotos['apres-'+id]||[])];
-  if(!m.etat||m.etat==='En cours')m.etat='Terminée';
-  save();
-  alert('✅ Compte rendu enregistré !');
-  closeSheet();
-  go('missions');
+  m.photosApres=[...(missionPhotosApres['apres-'+id]||[])];
+  if(m.etat==='En attente'||m.etat==='En cours')m.etat='Terminée';
+  save();alert('✅ Compte rendu enregistré !');closeSheet();go('missions');
 }
 
 function saveSuivi(mid){
@@ -450,6 +531,120 @@ function saveSuivi(mid){
   save();closeSheet();openDetail(mid);
 }
 function delSuivi(id,mid){D.suivis=D.suivis.filter(s=>s.id!==id);save();closeSheet();openDetail(mid);}
+
+/* ===== GÉNÉRATION PDF ===== */
+function openPDFSelector(cid){
+  const cl=D.clients.find(c=>c.id===cid);
+  const missions=D.missions.filter(m=>m.cid===cid);
+  if(!missions.length){alert('Aucune mission pour ce client.');return;}
+  sheet(`PDF — ${cdn(cl)}`,`
+    <div style="font-size:14px;color:#8e8e93;margin-bottom:8px">Sélectionne les missions à inclure dans le PDF :</div>
+    <div class="form-section">
+      ${missions.map(m=>`<div class="mission-check">
+        <input type="checkbox" id="chk-${m.id}" value="${m.id}" ${m.etat==='Terminée'||m.etat==='Payée'?'checked':''}>
+        <div style="flex:1">
+          <div style="font-weight:500">${m.chantier||'—'}</div>
+          <div style="font-size:13px;color:#8e8e93">${fd(m.date)} · ${fm(calcTotal(m))} · ${eB(m.etat)}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+    <button class="ios-btn ios-btn-purple" onclick="generatePDF(${cid})">📄 Générer le PDF</button>
+  `);
+}
+
+function generatePDF(cid){
+  const cl=D.clients.find(c=>c.id===cid);
+  const checked=[...document.querySelectorAll('input[type=checkbox]:checked')].map(cb=>parseInt(cb.value));
+  if(!checked.length){alert('Sélectionne au moins une mission.');return;}
+  const missions=checked.map(id=>D.missions.find(m=>m.id===id)).filter(Boolean);
+  const totalGlobal=missions.reduce((s,m)=>s+calcTotal(m),0);
+  const date=new Date().toLocaleDateString('fr-FR');
+
+  let missionsHTML='';
+  missions.forEach(m=>{
+    const lignes=m.lignes||[];
+    const tp=calcTP(m),tv=calcTV(m),tot=calcTotal(m);
+    let lignesRows=lignes.map(l=>`<tr>
+      <td>${l.type}</td>
+      <td>${l.designation||'—'}</td>
+      <td style="text-align:center">${l.qte}</td>
+      <td style="text-align:right">${l.prix?parseFloat(l.prix).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'}</td>
+      <td style="text-align:right;font-weight:600">${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</td>
+    </tr>`).join('');
+
+    let photosAvantHTML='';
+    if((m.photosAvant||[]).length>0){
+      photosAvantHTML=`<div class="pdf-photos"><h4>Photos avant</h4><div class="pdf-photos-grid">${m.photosAvant.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+    }
+    let photosApresHTML='';
+    if((m.photosApres||[]).length>0){
+      photosApresHTML=`<div class="pdf-photos"><h4>Photos après</h4><div class="pdf-photos-grid">${m.photosApres.map(src=>`<img src="${src}">`).join('')}</div></div>`;
+    }
+
+    missionsHTML+=`<div class="pdf-mission">
+      <div class="pdf-mission-header">Mission #${m.id} — ${m.chantier||'—'}</div>
+      <div class="pdf-mission-info">
+        <div><div class="pdf-info-label">Date</div><div class="pdf-info-value">${fd(m.date)}</div></div>
+        <div><div class="pdf-info-label">Adresse</div><div class="pdf-info-value">${m.adresse||'—'}</div></div>
+        ${m.dateExec?`<div><div class="pdf-info-label">Date d'exécution</div><div class="pdf-info-value">${fd(m.dateExec)}</div></div>`:''}
+        <div><div class="pdf-info-label">Statut</div><div class="pdf-info-value">${m.etat||'—'}</div></div>
+      </div>
+      ${lignes.length>0?`<table class="pdf-ligne-table">
+        <thead><tr><th>Type</th><th>Désignation</th><th>Qté</th><th>Prix</th><th>Total</th></tr></thead>
+        <tbody>${lignesRows}</tbody>
+      </table>
+      <div class="pdf-totaux">
+        <div class="pdf-total-line">Total Prestation : ${fmn(tp)} €</div>
+        <div class="pdf-total-line">Total Vente : ${fmn(tv)} €</div>
+        <div class="pdf-total-grand">Total mission : ${fmn(tot)} €</div>
+      </div>`:''}
+      ${m.compteRendu?`<div style="padding:12px 16px;font-size:13px;color:#555;border-top:1px solid #f0f0f0"><strong>Compte rendu :</strong> ${m.compteRendu}</div>`:''}
+      ${photosAvantHTML}${photosApresHTML}
+    </div>`;
+  });
+
+  const html=`
+    <div class="pdf-header">
+      <div class="pdf-logo-zone">
+        <div>
+          <div class="pdf-company">
+            <h1>${MSH.name}</h1>
+            <p>${MSH.contact} — ${MSH.activite}</p>
+            <p>📞 ${MSH.tel} &nbsp; ✉️ ${MSH.mail}</p>
+            <p>📍 ${MSH.adresse}, ${MSH.cp} ${MSH.ville}</p>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;color:#888;font-size:13px">
+        <div style="font-size:16px;font-weight:700;color:#1a3a6b">Récapitulatif</div>
+        <div>Date : ${date}</div>
+        <div>${missions.length} mission${missions.length>1?'s':''}</div>
+      </div>
+    </div>
+    <div class="pdf-client-box">
+      <h3>Client</h3>
+      <p>${cdn(cl)}</p>
+      ${cl.mobile?`<p style="font-size:13px;color:#555;margin-top:4px">📞 ${cl.mobile}</p>`:''}
+      ${cl.mail?`<p style="font-size:13px;color:#555">✉️ ${cl.mail}</p>`:''}
+    </div>
+    ${missionsHTML}
+    <div class="pdf-grand-total">
+      <span>Total général</span>
+      <span>${totalGlobal.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
+    </div>
+    <div class="pdf-footer">${MSH.name} — ${MSH.adresse}, ${MSH.cp} ${MSH.ville} — ${MSH.tel} — ${MSH.mail}</div>
+  `;
+
+  const tpl=document.getElementById('pdf-template');
+  tpl.style.display='block';
+  tpl.innerHTML=html;
+
+  setTimeout(()=>{
+    window.print();
+    tpl.style.display='none';
+    tpl.innerHTML='';
+  },300);
+}
 
 function sheet(title,body){
   const ov=document.createElement('div');ov.className='sheet-overlay';ov.id='sheet-overlay';
@@ -463,5 +658,12 @@ function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.re
 
 go('dash');
 </script>
+
+<style>
+@media print {
+  .app, .bottomnav, .fab, .sheet-overlay { display: none !important; }
+  #pdf-template { display: block !important; position: static !important; top: 0 !important; left: 0 !important; width: 100% !important; }
+}
+</style>
 </body>
 </html>
