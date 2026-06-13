@@ -270,7 +270,7 @@ function photoZone(pid,arr,label){
     <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}')">
       📷 ${label||'Ajouter des photos'}
     </button>
-    <input type="file" id="inp-${pid}-cam" accept="image/*" capture="environment" style="display:none" onchange="onPhoto('${pid}',this)">
+    <input type="file" id="inp-${pid}-cam" accept="image/*" style="display:none" onchange="onPhoto('${pid}',this)">
     <input type="file" id="inp-${pid}-gal" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <input type="file" id="inp-${pid}-file" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <div class="pprev" id="prev-${pid}">${thumbs(pid,arr)}</div>
