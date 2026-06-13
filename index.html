@@ -267,24 +267,16 @@ function bRecap(selM,selC){
 /* ===== PHOTO ZONE - UN SEUL BOUTON ===== */
 function photoZone(pid,arr,label){
   return`<div class="pzone">
-    <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}');return false;">
+    <button type="button" class="photo-main-btn" onclick="showPhotoMenu('${pid}')">
       📷 ${label||'Ajouter des photos'}
     </button>
-    <input type="file" id="inp-${pid}-cam" accept="image/*" style="display:none" onchange="onPhoto('${pid}',this)">
-    <input type="file" id="inp-${pid}-gal" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
-    <input type="file" id="inp-${pid}-file" accept="image/*" multiple style="display:none" onchange="onPhoto('${pid}',this)">
     <div class="pprev" id="prev-${pid}">${thumbs(pid,arr)}</div>
   </div>`;
 }
 
 function showPhotoMenu(pid){
-  // Empêcher tout déclenchement natif iOS
-  event && event.preventDefault && event.preventDefault();
-  event && event.stopPropagation && event.stopPropagation();
-  // Fermer tout menu existant
-  document.querySelectorAll('.action-sheet,.action-overlay').forEach(el=>el.remove());
   const ol=document.createElement('div');ol.className='action-overlay';ol.id='ao-'+pid;
-  ol.onclick=()=>{closeAS(pid);};
+  ol.onclick=()=>{ol.remove();const b=document.getElementById('as-'+pid);if(b)b.remove();};
   document.body.appendChild(ol);
   const as=document.createElement('div');as.className='action-sheet';as.id='as-'+pid;
   as.innerHTML=`<div class="action-group">
@@ -296,7 +288,19 @@ function showPhotoMenu(pid){
   document.body.appendChild(as);
 }
 function closeAS(pid){const a=document.getElementById('ao-'+pid);const b=document.getElementById('as-'+pid);if(a)a.remove();if(b)b.remove();}
-function trigP(pid,type){document.getElementById(`inp-${pid}-${type}`).click();}
+function trigP(pid,type){
+  closeAS(pid);
+  // Créer input dynamiquement pour éviter le menu natif iOS
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.accept='image/*';
+  if(type==='cam')inp.capture='environment';
+  if(type!=='cam')inp.multiple=true;
+  inp.style.display='none';
+  inp.onchange=()=>{onPhoto(pid,inp);inp.remove();};
+  document.body.appendChild(inp);
+  setTimeout(()=>inp.click(),50);
+}
 function getPhotos(pid){
   if(pid.startsWith('avant-'))return missionPhotosAvant[pid]||(missionPhotosAvant[pid]=[]);
   if(pid.startsWith('apres-'))return missionPhotosApres[pid]||(missionPhotosApres[pid]=[]);
