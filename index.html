@@ -727,7 +727,47 @@ function sheet(title,body){
 }
 function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();}
 
+// Démarrer l'app immédiatement avec localStorage
 go('dash');
+
+// Charger Firebase en arrière-plan après le démarrage
+setTimeout(function(){
+  var s1=document.createElement('script');
+  s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+  s1.onload=function(){
+    var s2=document.createElement('script');
+    s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+    s2.onload=function(){
+      try{
+        var app=firebase.initializeApp({
+          apiKey:"AIzaSyBz9IuIlhKLR55Uv7Ec5c6hHuHJjNWtE50",
+          authDomain:"multi-services-home.firebaseapp.com",
+          projectId:"multi-services-home",
+          storageBucket:"multi-services-home.firebasestorage.app",
+          messagingSenderId:"77041427640",
+          appId:"1:77041427640:web:2fa18e370c021d59b1804d"
+        });
+        _db=firebase.firestore();
+        // Charger depuis Firebase et mettre à jour si plus récent
+        _db.collection('app').doc('data').get().then(function(snap){
+          if(snap.exists){
+            var fd=snap.data();
+            // Utiliser Firebase si plus de données
+            if(fd&&fd.clients&&fd.clients.length>=(D.clients||[]).length){
+              D=fd;
+              saveLocal();
+              go('dash');
+            }
+          }
+          // Sync local vers Firebase
+          save();
+        }).catch(function(e){console.warn('FB read:',e);});
+      }catch(e){console.warn('FB init:',e);}
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+},1000);
 </script>
 
 <style>
