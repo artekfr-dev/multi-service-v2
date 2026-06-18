@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Test Firebase</title></head>
+<body>
+<h2>Test Firebase</h2>
+<div id="status">Chargement...</div>
+<button onclick="testWrite()">Écrire dans Firebase</button>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const s=document.getElementById('status');
+try{
+  firebase.initializeApp({
+    apiKey:"AIzaSyBz9IuIlhKLR55Uv7Ec5c6hHuHJjNWtE50",
+    authDomain:"multi-services-home.firebaseapp.com",
+    projectId:"multi-services-home",
+    storageBucket:"multi-services-home.firebasestorage.app",
+    messagingSenderId:"77041427640",
+    appId:"1:77041427640:web:2fa18e370c021d59b1804d"
+  });
+  var db=firebase.firestore();
+  s.innerHTML='✅ Firebase initialisé';
+  s.style.color='green';
+  
+  function testWrite(){
+    s.innerHTML='⏳ Écriture en cours...';
+    db.collection('test').doc('hello').set({msg:'Bonjour MSH',ts:new Date().toISOString()})
+      .then(function(){s.innerHTML='✅ Écriture réussie !';s.style.color='green';})
+      .catch(function(e){s.innerHTML='❌ Erreur: '+e.message;s.style.color='red';});
+  }
+}catch(e){
+  s.innerHTML='❌ Erreur init: '+e.message;
+  s.style.color='red';
+}
+</script>
+</body>
+</html>
