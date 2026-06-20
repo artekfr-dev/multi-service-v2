@@ -141,6 +141,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;back
   <div class="bottomnav">
     <div class="bnav-item active" onclick="go('dash')" id="bn-dash"><i class="ti ti-layout-dashboard"></i><span>Accueil</span></div>
     <div class="bnav-item" onclick="go('clients')" id="bn-clients"><i class="ti ti-users"></i><span>Clients</span></div>
+    <div class="bnav-item" onclick="go('chantiers')" id="bn-chantiers"><i class="ti ti-building"></i><span>Chantiers</span></div>
     <div class="bnav-item" onclick="go('missions')" id="bn-missions"><i class="ti ti-clipboard-list"></i><span>Missions</span></div>
     <div class="bnav-item" onclick="go('recap')" id="bn-recap"><i class="ti ti-report-money"></i><span>Récap</span></div>
   </div>
@@ -218,14 +219,19 @@ function calcTP(m){return(m.lignes||[]).filter(l=>l.type==='Prestation').reduce(
 function calcTV(m){return(m.lignes||[]).filter(l=>l.type==='Vente').reduce((s,l)=>s+(parseFloat(l.qte)||0)*(parseFloat(l.prix)||0),0);}
 
 function go(t){
-  ['dash','clients','missions','recap'].forEach(x=>{document.getElementById('bn-'+x).classList.toggle('active',x===t);});
-  document.getElementById('page-title').textContent={dash:'Accueil',clients:'Clients',missions:'Missions',recap:'Récap mensuel'}[t];
+  ['dash','clients','chantiers','missions','recap'].forEach(x=>{
+    var el=document.getElementById('bn-'+x);
+    if(el)el.classList.toggle('active',x===t);
+  });
+  document.getElementById('page-title').textContent={dash:'Accueil',clients:'Clients',chantiers:'Chantiers',missions:'Missions',recap:'Récap mensuel'}[t];
   const fab=document.getElementById('fab-container');fab.innerHTML='';
   if(t==='clients')fab.innerHTML=`<button class="fab" onclick="openClient()">+</button>`;
+  if(t==='chantiers')fab.innerHTML=`<button class="fab" onclick="openChantier()">+</button>`;
   if(t==='missions')fab.innerHTML=`<button class="fab" onclick="openMission()">+</button>`;
   const el=document.getElementById('content');
   if(t==='dash')el.innerHTML=rDash();
   else if(t==='clients')el.innerHTML=rClients();
+  else if(t==='chantiers')el.innerHTML=rChantiers();
   else if(t==='missions')el.innerHTML=rMissions();
   else el.innerHTML=rRecap();
 }
@@ -271,6 +277,117 @@ function rMissions(){
       <div class="cell-content"><div class="cell-title">${m.chantier||'—'}</div><div class="cell-sub">${cdn(cl)} · ${fm(calcTotal(m))}</div></div>
       <div class="cell-right">${eB(m.etat)}${ns>0?`<span style="background:#534AB7;color:#fff;font-size:11px;border-radius:10px;padding:1px 6px">${ns}</span>`:''}<span class="cell-chevron">›</span></div>
     </div>`;}).join('')}</div>`;
+}
+
+function rChantiers(){
+  // Collecter tous les chantiers de tous les clients
+  var allChantiers=[];
+  D.clients.forEach(function(c){
+    (c.chantiers||[]).forEach(function(ch){
+      allChantiers.push({client:c,chantier:ch});
+    });
+  });
+  if(!allChantiers.length)return`<div class="empty-state"><div class="empty-icon">🏗️</div><div class="empty-text">Aucun chantier</div><div class="empty-sub">Appuie sur + pour ajouter</div></div>`;
+  
+  // Grouper par client
+  var byClient={};
+  allChantiers.forEach(function(item){
+    var cid=item.client.id;
+    if(!byClient[cid])byClient[cid]={client:item.client,chantiers:[]};
+    byClient[cid].chantiers.push(item.chantier);
+  });
+
+  var html='<div style="padding:8px 0">';
+  Object.values(byClient).forEach(function(group){
+    html+=`<div class="section-header" style="margin:16px 12px 4px">${cdn(group.client)}</div>
+    <div class="section" style="margin:0 12px">`;
+    group.chantiers.forEach(function(ch,i){
+      html+=`<div class="cell" onclick="openChantier(${group.client.id},'${ch.nom}')">
+        <div class="cell-icon" style="background:#f0f7ff;font-size:20px">🏗️</div>
+        <div class="cell-content">
+          <div class="cell-title">${ch.nom||'—'}</div>
+          <div class="cell-sub">${ch.adresse||'—'}${ch.code?' · 🔑 '+ch.code:''}</div>
+          ${ch.notes?`<div style="font-size:12px;color:#8e8e93;margin-top:2px">📝 ${ch.notes}</div>`:''}
+        </div>
+        <span class="cell-chevron">›</span>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function openChantier(clientId,chantierNom){
+  // Trouver le chantier existant si on édite
+  var cl=clientId?D.clients.find(function(c){return c.id===clientId;}):null;
+  var ch=cl&&chantierNom?( (cl.chantiers||[]).find(function(c){return c.nom===chantierNom;}) ):null;
+  
+  sheet(`${ch?'Modifier':'Nouveau'} chantier`,`
+    <div class="form-section">
+      <div class="form-cell">
+        <div class="form-label">Client *</div>
+        <select class="form-select" id="fc-cid">
+          <option value="">— Choisir un client —</option>
+          ${D.clients.map(function(c){return`<option value="${c.id}" ${cl&&c.id===cl.id?'selected':''}>${cdn(c)}</option>`;}).join('')}
+        </select>
+      </div>
+      <div class="form-cell">
+        <div class="form-label">Nom du chantier *</div>
+        <input class="form-input" id="fc-nom" value="${ch?ch.nom||'':''}" placeholder="Appt 3B, Villa Les Pins...">
+      </div>
+      <div class="form-cell">
+        <div class="form-label">Adresse</div>
+        <input class="form-input" id="fc-adr" value="${ch?ch.adresse||'':''}" placeholder="12 rue Victor Hugo, Antibes">
+      </div>
+      <div class="form-cell">
+        <div class="form-label">🔑 Code d'accès</div>
+        <input class="form-input" id="fc-code" value="${ch?ch.code||'':''}" placeholder="1234A...">
+      </div>
+      <div class="form-cell">
+        <div class="form-label">📝 Notes d'accès</div>
+        <input class="form-input" id="fc-notes" value="${ch?ch.notes||'':''}" placeholder="3ème étage, porte gauche...">
+      </div>
+    </div>
+    ${ch?`<button class="ios-btn ios-btn-danger" onclick="delChantier(${clientId},'${chantierNom}')">Supprimer ce chantier</button>`:''}
+    <button class="ios-btn ios-btn-primary" onclick="saveChantier(${clientId||'null'},'${chantierNom||''}')">Enregistrer</button>
+  `);
+}
+
+function saveChantier(oldClientId,oldNom){
+  var cid=parseInt(document.getElementById('fc-cid').value);
+  var nom=document.getElementById('fc-nom').value.trim();
+  if(!cid||!nom){alert('Client et nom obligatoires');return;}
+  var adr=document.getElementById('fc-adr').value.trim();
+  var code=document.getElementById('fc-code').value.trim();
+  var notes=document.getElementById('fc-notes').value.trim();
+  var newCh={nom:nom,adresse:adr,code:code,notes:notes};
+  
+  // Si on change de client, supprimer de l'ancien
+  if(oldClientId&&oldNom&&oldClientId!==cid){
+    var oldCl=D.clients.find(function(c){return c.id===oldClientId;});
+    if(oldCl)oldCl.chantiers=(oldCl.chantiers||[]).filter(function(c){return c.nom!==oldNom;});
+  }
+  
+  var cl=D.clients.find(function(c){return c.id===cid;});
+  if(!cl){alert('Client introuvable');return;}
+  if(!cl.chantiers)cl.chantiers=[];
+  
+  if(oldNom&&oldClientId===cid){
+    // Modifier existant
+    var idx=cl.chantiers.findIndex(function(c){return c.nom===oldNom;});
+    if(idx>=0)cl.chantiers[idx]=newCh;else cl.chantiers.push(newCh);
+  } else {
+    cl.chantiers.push(newCh);
+  }
+  save();closeSheet();go('chantiers');
+}
+
+function delChantier(clientId,nom){
+  if(!confirm('Supprimer ce chantier ?'))return;
+  var cl=D.clients.find(function(c){return c.id===clientId;});
+  if(cl)cl.chantiers=(cl.chantiers||[]).filter(function(c){return c.nom!==nom;});
+  save();closeSheet();go('chantiers');
 }
 
 function rRecap(){
