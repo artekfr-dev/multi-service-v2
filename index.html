@@ -660,7 +660,18 @@ function saveClient(id){
   const type=document.getElementById('f-type').value;let nom='',prenom='',civ='',raison='';
   if(type==='Particulier'){nom=document.getElementById('f-nom').value.trim();prenom=document.getElementById('f-prenom').value.trim();civ=document.getElementById('f-civ').value;if(!nom){alert('Nom obligatoire');return;}}
   else{raison=document.getElementById('f-raison').value.trim();if(!raison){alert('Raison sociale obligatoire');return;}}
-  const chantiers=chantiersTemp.filter(function(c){return c.nom.trim();}).map(function(c){return{nom:c.nom.trim(),adresse:c.adresse.trim()};});
+  // Lire les valeurs directement depuis les inputs au moment de sauvegarder
+  chantiersTemp.forEach(function(ch){
+    var nomEl=document.querySelector(`input[onchange*="'${ch.id}','nom'"]`);
+    var adrEl=document.querySelector(`input[onchange*="'${ch.id}','adresse'"]`);
+    var codeEl=document.querySelector(`input[onchange*="'${ch.id}','code'"]`);
+    var notesEl=document.querySelector(`input[onchange*="'${ch.id}','notes'"]`);
+    if(nomEl)ch.nom=nomEl.value;
+    if(adrEl)ch.adresse=adrEl.value;
+    if(codeEl)ch.code=codeEl.value;
+    if(notesEl)ch.notes=notesEl.value;
+  });
+  const chantiers=chantiersTemp.filter(function(c){return(c.nom||'').trim();}).map(function(c){return{nom:(c.nom||'').trim(),adresse:(c.adresse||'').trim(),code:(c.code||'').trim(),notes:(c.notes||'').trim()};});
   const obj={id:id||D.cid++,type,nom,prenom,civ,raison,mobile:document.getElementById('f-mob').value.trim(),mail:document.getElementById('f-mail').value.trim(),adr:document.getElementById('f-adr').value.trim(),cp:document.getElementById('f-cp').value.trim(),ville:document.getElementById('f-ville').value.trim(),chantiers:chantiers};
   if(id){const i=D.clients.findIndex(c=>c.id===id);D.clients[i]=obj;}else D.clients.push(obj);
   save();closeSheet();go('clients');
