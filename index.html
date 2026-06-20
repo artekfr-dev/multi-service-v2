@@ -376,22 +376,125 @@ function openClient(id){
       <div class="form-cell"><div class="form-label">Code postal</div><input class="form-input" id="f-cp" type="number" value="${c?c.cp||'':''}"></div>
       <div class="form-cell"><div class="form-label">Ville</div><input class="form-input" id="f-ville" value="${c?c.ville||'':''}"></div>
     </div>
+    <div style="font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;padding:8px 4px 4px">Chantiers</div>
+    <div id="chantiers-list"></div>
+    <button type="button" class="ios-btn ios-btn-secondary" style="border:1px dashed #007AFF;margin-bottom:4px" onclick="addChantierField()">+ Ajouter un chantier</button>
     ${id?`<button class="ios-btn ios-btn-danger" onclick="delClient(${id})">Supprimer ce client</button>`:''}
     <button class="ios-btn ios-btn-primary" onclick="saveClient(${id||'null'})">Enregistrer</button>
   `);
+  // Rendre les chantiers existants
+  renderChantierFields(c?c.chantiers||[]:[]); 
 }
+// ===== GESTION CHANTIERS =====
+let chantiersTemp=[];
+
+function renderChantierFields(list){
+  chantiersTemp=list.map(function(c,i){return{id:'ch'+i,nom:c.nom||'',adresse:c.adresse||''};});
+  upChantiersList();
+}
+
+function upChantiersList(){
+  var el=document.getElementById('chantiers-list');
+  if(!el)return;
+  el.innerHTML=chantiersTemp.map(function(ch){return`
+    <div style="background:#fff;border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid #e5e5ea">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0f7ff;border-bottom:1px solid #e5e5ea">
+        <span style="font-size:12px;font-weight:600;color:#007AFF">Chantier</span>
+        <button onclick="delChantierField('${ch.id}')" style="border:none;background:none;color:#ff3b30;font-size:18px;cursor:pointer">×</button>
+      </div>
+      <div style="padding:0 12px">
+        <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">Nom du chantier</div>
+        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 8px;border-bottom:0.5px solid #f2f2f7" value="${ch.nom}" placeholder="Appt 3B, Villa Les Pins..." onchange="updChantier('${ch.id}','nom',this.value)">
+        <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">Adresse</div>
+        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 10px" value="${ch.adresse}" placeholder="12 rue Victor Hugo, Antibes" onchange="updChantier('${ch.id}','adresse',this.value)">
+      </div>
+    </div>`;}).join('');
+}
+
+function addChantierField(){
+  chantiersTemp.push({id:'ch'+Date.now(),nom:'',adresse:''});
+  upChantiersList();
+}
+
+function delChantierField(id){
+  chantiersTemp=chantiersTemp.filter(function(c){return c.id!==id;});
+  upChantiersList();
+}
+
+function updChantier(id,key,val){
+  var ch=chantiersTemp.find(function(c){return c.id===id;});
+  if(ch)ch[key]=val;
+}
+
 function togCF(){const t=document.getElementById('f-type').value;document.getElementById('fp').style.display=t==='Particulier'?'':'none';document.getElementById('fpr').style.display=t==='Professionnel'?'':'none';}
 function saveClient(id){
   const type=document.getElementById('f-type').value;let nom='',prenom='',civ='',raison='';
   if(type==='Particulier'){nom=document.getElementById('f-nom').value.trim();prenom=document.getElementById('f-prenom').value.trim();civ=document.getElementById('f-civ').value;if(!nom){alert('Nom obligatoire');return;}}
   else{raison=document.getElementById('f-raison').value.trim();if(!raison){alert('Raison sociale obligatoire');return;}}
-  const obj={id:id||D.cid++,type,nom,prenom,civ,raison,mobile:document.getElementById('f-mob').value.trim(),mail:document.getElementById('f-mail').value.trim(),adr:document.getElementById('f-adr').value.trim(),cp:document.getElementById('f-cp').value.trim(),ville:document.getElementById('f-ville').value.trim()};
+  const chantiers=chantiersTemp.filter(function(c){return c.nom.trim();}).map(function(c){return{nom:c.nom.trim(),adresse:c.adresse.trim()};});
+  const obj={id:id||D.cid++,type,nom,prenom,civ,raison,mobile:document.getElementById('f-mob').value.trim(),mail:document.getElementById('f-mail').value.trim(),adr:document.getElementById('f-adr').value.trim(),cp:document.getElementById('f-cp').value.trim(),ville:document.getElementById('f-ville').value.trim(),chantiers:chantiers};
   if(id){const i=D.clients.findIndex(c=>c.id===id);D.clients[i]=obj;}else D.clients.push(obj);
   save();closeSheet();go('clients');
 }
 function delClient(id){if(confirm('Supprimer ce client ?')){D.clients=D.clients.filter(c=>c.id!==id);save();closeSheet();go('clients');}}
 
 /* ===== MISSIONS ===== */
+function onClientChange(cid,curChantier,curAdresse){
+  var cl=D.clients.find(function(c){return c.id===parseInt(cid);});
+  var sel=document.getElementById('chantier-selector');
+  if(!sel)return;
+  if(cl&&cl.chantiers&&cl.chantiers.length>0){
+    // Proposer les chantiers existants
+    var opts=cl.chantiers.map(function(ch){
+      var selected=(ch.nom===curChantier)?'selected':'';
+      return`<option value="${ch.nom}|${ch.adresse}" ${selected}>${ch.nom} — ${ch.adresse}</option>`;
+    }).join('');
+    sel.innerHTML=`<select class="form-select" id="f-ch" onchange="onChantierSelect(this.value)">
+      <option value="">— Choisir un chantier —</option>
+      ${opts}
+      <option value="__new__">+ Nouveau chantier</option>
+    </select>
+    <div id="new-chantier-fields" style="display:none">
+      <input class="form-input" id="f-ch-new" placeholder="Nom du chantier">
+      <input class="form-input" id="f-adr-new" placeholder="Adresse" style="margin-top:4px">
+    </div>`;
+    // Pré-remplir l'adresse si chantier déjà sélectionné
+    if(curChantier){
+      var found=cl.chantiers.find(function(c){return c.nom===curChantier;});
+      if(found){document.getElementById('f-adr').value=found.adresse||curAdresse;}
+    }
+  } else {
+    sel.innerHTML=`<input class="form-input" id="f-ch" value="${curChantier||''}" placeholder="Nom du chantier">`;
+  }
+}
+
+function onChantierSelect(val){
+  if(val==='__new__'){
+    document.getElementById('new-chantier-fields').style.display='';
+    document.getElementById('f-adr').value='';
+  } else if(val){
+    var parts=val.split('|');
+    document.getElementById('f-adr').value=parts[1]||'';
+    var nf=document.getElementById('new-chantier-fields');
+    if(nf)nf.style.display='none';
+  }
+}
+
+function getChantierValue(){
+  var sel=document.getElementById('f-ch');
+  if(sel&&sel.tagName==='SELECT'){
+    var v=sel.value;
+    if(v==='__new__'){
+      var inp=document.getElementById('f-ch-new');
+      var inpa=document.getElementById('f-adr-new');
+      if(inpa&&inpa.value)document.getElementById('f-adr').value=inpa.value;
+      return inp?inp.value.trim():'';
+    }
+    return v?v.split('|')[0]:'';
+  }
+  return sel?sel.value.trim():'';
+}
+
 function newLigne(){return{id:'l'+(ligneIdx++),type:'Prestation',designation:'',qte:1,prix:''};}
 function renderLignes(){
   const c=document.getElementById('lignes-container');if(!c)return;
@@ -451,8 +554,12 @@ function openMission(id){
 
   sheet(`${m?'Modifier':'Nouvelle'} mission`,`
     <div class="form-section">
-      <div class="form-cell"><div class="form-label">Client *</div><select class="form-select" id="f-cid"><option value="">— Choisir —</option>${D.clients.map(c=>`<option value="${c.id}" ${m&&m.cid===c.id?'selected':''}>${cdn(c)}</option>`).join('')}</select></div>
-      <div class="form-cell"><div class="form-label">Nom du chantier *</div><input class="form-input" id="f-ch" value="${m?m.chantier||'':''}" placeholder="Ménage Appt 3B"></div>
+      <div class="form-cell"><div class="form-label">Client *</div><select class="form-select" id="f-cid" onchange="onClientChange(this.value,'${m?m.chantier:''}','${m?m.adresse:''}')"><option value="">— Choisir —</option>${D.clients.map(c=>`<option value="${c.id}" ${m&&m.cid===c.id?'selected':''}>${cdn(c)}</option>`).join('')}</select></div>
+      <div class="form-cell"><div class="form-label">Chantier *</div>
+        <div id="chantier-selector">
+          <input class="form-input" id="f-ch" value="${m?m.chantier||'':''}" placeholder="Ménage Appt 3B">
+        </div>
+      </div>
       <div class="form-cell"><div class="form-label">Adresse</div><input class="form-input" id="f-adr" value="${m?m.adresse||'':''}" placeholder="12 rue Victor Hugo"></div>
       <div class="form-cell"><div class="form-label">Date</div><input class="form-input" type="date" id="f-date" value="${m?m.date||'':''}"></div>
       <div class="form-cell"><div class="form-label">État</div><select class="form-select" id="f-et">
@@ -481,7 +588,7 @@ function openMission(id){
 
 function saveMission(id){
   const cid=parseInt(document.getElementById('f-cid').value);
-  const chantier=document.getElementById('f-ch').value.trim();
+  const chantier=getChantierValue();
   if(!cid||!chantier){alert('Client et chantier obligatoires');return;}
   const lignes=lignesTemp.map(l=>({...l,photosLigne:[...(linePhotos["ligne-"+l.id]||[])]}));
   const m=id?D.missions.find(x=>x.id===id):null;
@@ -772,7 +879,7 @@ function sheet(title,body){
     <div class="sheet-body">${body}</div></div>`;
   document.body.appendChild(ov);
 }
-function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();}
+function closeSheet(){const s=document.getElementById('sheet-overlay');if(s)s.remove();chantiersTemp=[];}
 
 initData().then(function(){go('dash');});
 </script>
