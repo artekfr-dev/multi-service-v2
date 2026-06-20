@@ -171,20 +171,35 @@ let D={clients:[],missions:[],suivis:[],cid:1,mid:1,sid:1};
 function save(){
   try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}
   if(_db){
-    _db.collection('app').doc('data').set(JSON.parse(JSON.stringify(D)))
-      .then(function(){console.log('Firebase sauvegardé !');})
-      .catch(function(e){console.warn('Firebase save error:',e);});
-  } else { console.warn('_db est null, pas de sauvegarde Firebase'); }
+    var d2=JSON.parse(JSON.stringify(D));
+    _db.collection('app').doc('data').set(d2)
+      .then(function(){console.log('✅ Firebase sauvegardé');})
+      .catch(function(e){
+        console.warn('Firebase save error:',e);
+        setTimeout(function(){if(_db)_db.collection('app').doc('data').set(d2).catch(function(){});},3000);
+      });
+  }
 }
 
 async function initData(){
   if(_db){
     try{
       var snap=await _db.collection('app').doc('data').get();
-      if(snap.exists){D=snap.data();localStorage.setItem(SK,JSON.stringify(D));console.log('Données Firebase chargées');return;}
-    }catch(e){console.warn('FB load error:',e);}
+      if(snap.exists){
+        var fd=snap.data();
+        if(fd&&(fd.clients||fd.missions)){
+          D=fd;
+          try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}
+          console.log('✅ Firebase chargé');
+          return;
+        }
+      }
+    }catch(e){console.warn('FB load:',e);}
   }
-  try{var r=localStorage.getItem(SK);if(r){D=JSON.parse(r);console.log('Données localStorage chargées');}}catch(e){}
+  try{
+    var r=localStorage.getItem(SK);
+    if(r){D=JSON.parse(r);console.log('✅ localStorage chargé');}
+  }catch(e){}
 }
 let linePhotos={};
 let lignesTemp=[];
@@ -743,7 +758,7 @@ function generatePDF(cid){
       @media print{.share-btn{display:none}.pdf-wrap{box-shadow:none}}
     </style>
   </head><body>
-    <button class="share-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+    <div style="display:flex;gap:10px;margin-bottom:16px"><button onclick="window.close()" style="flex:1;padding:14px;background:#f2f2f7;color:#1c1c1e;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">← Retour</button><button onclick="window.print()" style="flex:2;padding:14px;background:#007AFF;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">🖨️ Imprimer / PDF</button></div>
     ${html}
   </body></html>`);
   win.document.close();
