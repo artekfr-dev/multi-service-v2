@@ -406,7 +406,11 @@ function upChantiersList(){
         <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">Nom du chantier</div>
         <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 8px;border-bottom:0.5px solid #f2f2f7" value="${ch.nom}" placeholder="Appt 3B, Villa Les Pins..." onchange="updChantier('${ch.id}','nom',this.value)">
         <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">Adresse</div>
-        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 10px" value="${ch.adresse}" placeholder="12 rue Victor Hugo, Antibes" onchange="updChantier('${ch.id}','adresse',this.value)">
+        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 8px;border-bottom:0.5px solid #f2f2f7" value="${ch.adresse}" placeholder="12 rue Victor Hugo, Antibes" onchange="updChantier('${ch.id}','adresse',this.value)">
+        <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">🔑 Code d'accès</div>
+        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 8px;border-bottom:0.5px solid #f2f2f7" value="${ch.code||''}" placeholder="1234A, B5678..." onchange="updChantier('${ch.id}','code',this.value)">
+        <div style="font-size:11px;color:#8e8e93;text-transform:uppercase;font-weight:600;padding-top:8px">📝 Notes d'accès</div>
+        <input style="width:100%;border:none;font-size:15px;color:#1c1c1e;outline:none;padding:6px 0 10px" value="${ch.notes||''}" placeholder="3ème étage, porte gauche, boîte aux lettres..." onchange="updChantier('${ch.id}','notes',this.value)">
       </div>
     </div>`;}).join('');
 }
@@ -472,12 +476,25 @@ function onChantierSelect(val){
   if(val==='__new__'){
     document.getElementById('new-chantier-fields').style.display='';
     document.getElementById('f-adr').value='';
+    var ci=document.getElementById('chantier-info');
+    if(ci)ci.innerHTML='';
   } else if(val){
     var parts=val.split('|');
     document.getElementById('f-adr').value=parts[1]||'';
     var nf=document.getElementById('new-chantier-fields');
     if(nf)nf.style.display='none';
+    showChantierInfo({nom:parts[0],adresse:parts[1],code:parts[2],notes:parts[3]});
   }
+}
+
+function showChantierInfo(ch){
+  var ci=document.getElementById('chantier-info');
+  if(!ci)return;
+  if(!ch.code&&!ch.notes){ci.innerHTML='';return;}
+  ci.innerHTML=`<div style="background:#f0f7ff;border-radius:8px;padding:10px 12px;margin-top:4px;font-size:13px">
+    ${ch.code?`<div style="margin-bottom:4px">🔑 <strong>Code :</strong> ${ch.code}</div>`:''}
+    ${ch.notes?`<div>📝 <strong>Notes :</strong> ${ch.notes}</div>`:''}
+  </div>`;
 }
 
 function getChantierValue(){
@@ -625,6 +642,7 @@ function openDetail(id){
       <div class="cell"><div class="cell-content"><div class="cell-sub">Client</div><div class="cell-title">${cdn(cl)}</div></div></div>
       <div class="cell"><div class="cell-content"><div class="cell-sub">Chantier</div><div class="cell-title">${m.chantier||'—'}</div></div></div>
       ${m.adresse?`<div class="cell"><div class="cell-content"><div class="cell-sub">Adresse</div><div class="cell-title">${m.adresse}</div></div></div>`:''}
+      ${(()=>{var cl2=D.clients.find(function(c){return c.id===m.cid;});var ch2=cl2&&cl2.chantiers?cl2.chantiers.find(function(c){return c.nom===m.chantier;}):null;return ch2&&(ch2.code||ch2.notes)?`<div class="cell" style="flex-direction:column;align-items:flex-start;gap:4px;background:#f0f7ff">${ch2.code?`<div style="font-size:13px">🔑 <strong>Code :</strong> ${ch2.code}</div>`:''} ${ch2.notes?`<div style="font-size:13px">📝 ${ch2.notes}</div>`:''}</div>`:''})()}
       <div class="cell"><div class="cell-content"><div class="cell-sub">Date</div><div class="cell-title">${fd(m.date)}</div></div><div>${eB(m.etat)}</div></div>
     </div>
 
