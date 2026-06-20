@@ -240,7 +240,15 @@ function rDash(){
   const ca=D.missions.reduce((s,m)=>s+calcTotal(m),0);
   const enc=D.missions.filter(m=>m.etat==='En cours').length;
   const last=[...D.missions].reverse().slice(0,5);
-  return`<div class="stats-grid">
+  return`
+  <div style="margin:16px 12px 0">
+    <button onclick="openRecherche()" style="width:100%;padding:13px;background:#fff;border:1px solid #e5e5ea;border-radius:12px;font-size:15px;font-weight:500;color:#1c1c1e;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <span style="font-size:20px">🔍</span>
+      <span>Rechercher par chantier</span>
+      <span style="margin-left:auto;color:#c7c7cc">›</span>
+    </button>
+  </div>
+  <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Clients</div><div class="stat-value" style="color:#534AB7">${D.clients.length}</div></div>
     <div class="stat-card"><div class="stat-label">Missions</div><div class="stat-value" style="color:#007AFF">${D.missions.length}</div></div>
     <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value" style="color:#ff9500">${enc}</div></div>
@@ -388,6 +396,106 @@ function delChantier(clientId,nom){
   var cl=D.clients.find(function(c){return c.id===clientId;});
   if(cl)cl.chantiers=(cl.chantiers||[]).filter(function(c){return c.nom!==nom;});
   save();closeSheet();go('chantiers');
+}
+
+function openRecherche(){
+  // Collecter tous les chantiers
+  var allChantiers=[];
+  D.clients.forEach(function(c){
+    (c.chantiers||[]).forEach(function(ch){
+      allChantiers.push({clientId:c.id,clientNom:cdn(c),chantierNom:ch.nom,adresse:ch.adresse||''});
+    });
+  });
+  // Aussi les chantiers utilisés dans les missions mais pas encore enregistrés
+  D.missions.forEach(function(m){
+    if(m.chantier){
+      var exists=allChantiers.find(function(c){return c.clientId===m.cid&&c.chantierNom===m.chantier;});
+      if(!exists){
+        var cl=D.clients.find(function(c){return c.id===m.cid;});
+        if(cl)allChantiers.push({clientId:m.cid,clientNom:cdn(cl),chantierNom:m.chantier,adresse:m.adresse||''});
+      }
+    }
+  });
+
+  if(!allChantiers.length){alert('Aucun chantier trouvé.');return;}
+
+  var opts=allChantiers.map(function(c){
+    return`<option value="${c.clientId}|${c.chantierNom}">${c.clientNom} — ${c.chantierNom}</option>`;
+  }).join('');
+
+  sheet('🔍 Recherche par chantier',`
+    <div class="form-section">
+      <div class="form-cell">
+        <div class="form-label">Chantier</div>
+        <select class="form-select" id="rch-select" onchange="showHistorique(this.value)">
+          <option value="">— Choisir un chantier —</option>
+          ${opts}
+        </select>
+      </div>
+    </div>
+    <div id="historique-result"></div>
+  `);
+}
+
+function showHistorique(val){
+  if(!val)return;
+  var parts=val.split('|');
+  var cid=parseInt(parts[0]);
+  var chantierNom=parts[1];
+  var cl=D.clients.find(function(c){return c.id===cid;});
+  var chInfo=cl&&cl.chantiers?(cl.chantiers.find(function(c){return c.nom===chantierNom;})):null;
+  
+  // Missions pour ce chantier
+  var missions=D.missions.filter(function(m){return m.cid===cid&&m.chantier===chantierNom;});
+  missions.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  
+  var el=document.getElementById('historique-result');
+  if(!el)return;
+
+  if(!missions.length){
+    el.innerHTML=`<div class="empty-state" style="padding:30px 20px"><div class="empty-icon">📋</div><div class="empty-text">Aucune mission</div><div class="empty-sub">Pas encore d'intervention sur ce chantier</div></div>`;
+    return;
+  }
+
+  var totalCA=missions.reduce(function(s,m){return s+calcTotal(m);},0);
+  
+  var html=`
+    ${chInfo&&(chInfo.code||chInfo.notes)?`
+    <div style="background:#f0f7ff;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+      ${chInfo.code?`<div style="font-size:13px;margin-bottom:4px">🔑 <strong>Code :</strong> ${chInfo.code}</div>`:''}
+      ${chInfo.notes?`<div style="font-size:13px">📝 ${chInfo.notes}</div>`:''}
+    </div>`:''}
+    <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;color:#8e8e93;margin-bottom:2px">${missions.length} intervention${missions.length>1?'s':''}</div>
+        <div style="font-size:17px;font-weight:700;color:#065f46">${totalCA.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+      </div>
+      <div style="font-size:13px;color:#8e8e93">CA total</div>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;padding:4px 0 8px">Historique</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+    ${missions.map(function(m){
+      var lignes=m.lignes||[];
+      var tot=calcTotal(m);
+      return`<div style="background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e5ea" onclick="closeSheet();openDetail(${m.id})">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5f5f5">
+          <div>
+            <div style="font-size:13px;font-weight:600">${fd(m.date)}</div>
+            <div style="font-size:12px;color:#8e8e93;margin-top:1px">${m.dateExec?'Exécuté le '+fd(m.dateExec):''}</div>
+          </div>
+          ${eB(m.etat)}
+        </div>
+        ${lignes.length>0?`<div style="padding:8px 14px;border-bottom:1px solid #f5f5f5">${lignes.map(function(l){return`<div style="font-size:13px;color:#555;padding:2px 0">• ${l.designation||l.type} — ${fmn((parseFloat(l.qte)||0)*(parseFloat(l.prix)||0))} €</div>`;}).join('')}</div>`:''}
+        <div style="padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;color:#8e8e93">Total mission</div>
+          <div style="font-size:15px;font-weight:700;color:#065f46">${fm(tot)}</div>
+        </div>
+        ${m.compteRendu?`<div style="padding:6px 14px 10px;font-size:12px;color:#8e8e93;border-top:1px solid #f5f5f5">📝 ${m.compteRendu}</div>`:''}
+      </div>`;
+    }).join('')}
+    </div>`;
+  
+  el.innerHTML=html;
 }
 
 function rRecap(){
