@@ -239,6 +239,9 @@ function go(t){
 function rDash(){
   const ca=D.missions.reduce((s,m)=>s+calcTotal(m),0);
   const enc=D.missions.filter(m=>m.etat==='En cours').length;
+  const term=D.missions.filter(m=>m.etat==='Terminée').length;
+  const paid=D.missions.filter(m=>m.etat==='Payée').length;
+  const caPayee=D.missions.filter(m=>m.etat==='Payée').reduce((s,m)=>s+calcTotal(m),0);
   const last=[...D.missions].reverse().slice(0,5);
   return`
   <div style="margin:16px 12px 0">
@@ -253,6 +256,16 @@ function rDash(){
     <div class="stat-card"><div class="stat-label">Missions</div><div class="stat-value" style="color:#007AFF">${D.missions.length}</div></div>
     <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value" style="color:#ff9500">${enc}</div></div>
     <div class="stat-card"><div class="stat-label">CA total</div><div class="stat-value" style="color:#34c759;font-size:20px">${ca.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</div></div>
+    <div class="stat-card" onclick="showMissionsByStatus('Terminée')" style="cursor:pointer;border:1px solid #ede9fe">
+      <div class="stat-label">✅ Terminées</div>
+      <div class="stat-value" style="color:#4c1d95">${term}</div>
+      <div style="font-size:11px;color:#8e8e93;margin-top:4px">Non payées</div>
+    </div>
+    <div class="stat-card" onclick="showMissionsByStatus('Payée')" style="cursor:pointer;border:1px solid #d1fae5">
+      <div class="stat-label">💶 Payées</div>
+      <div class="stat-value" style="color:#065f46">${paid}</div>
+      <div style="font-size:11px;color:#8e8e93;margin-top:4px">${caPayee.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</div>
+    </div>
   </div>
   <div class="section-header" style="margin:20px 12px 0">Dernières missions</div>
   ${last.length===0?`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Aucune mission</div><div class="empty-sub">Appuie sur + pour créer</div></div>`:`
@@ -396,6 +409,36 @@ function delChantier(clientId,nom){
   var cl=D.clients.find(function(c){return c.id===clientId;});
   if(cl)cl.chantiers=(cl.chantiers||[]).filter(function(c){return c.nom!==nom;});
   save();closeSheet();go('chantiers');
+}
+
+function showMissionsByStatus(status){
+  var missions=D.missions.filter(function(m){return m.etat===status;});
+  missions.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var icon=status==='Terminée'?'✅':'💶';
+  var total=missions.reduce(function(s,m){return s+calcTotal(m);},0);
+  
+  sheet(icon+' Missions '+status+'s',`
+    <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:#8e8e93">${missions.length} mission${missions.length>1?'s':''}</div>
+      <div style="font-size:17px;font-weight:700;color:#065f46">${total.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+    </div>
+    ${missions.length===0?'<div class="empty-state"><div class="empty-icon">${icon}</div><div class="empty-text">Aucune mission ${status.toLowerCase()}</div></div>':
+    '<div style="display:flex;flex-direction:column;gap:8px">'+missions.map(function(m){
+      var cl=D.clients.find(function(c){return c.id===m.cid;});
+      return`<div style="background:#fff;border-radius:10px;border:1px solid #e5e5ea;overflow:hidden" onclick="closeSheet();openDetail(${m.id})">
+        <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:14px;font-weight:600">${m.chantier||'—'}</div>
+            <div style="font-size:12px;color:#8e8e93">${cdn(cl)} · ${fd(m.date)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:15px;font-weight:700;color:#065f46">${fm(calcTotal(m))}</div>
+            ${m.moyenPaiement?'<div style="font-size:11px;color:#8e8e93;margin-top:2px">'+m.moyenPaiement+'</div>':''}
+          </div>
+        </div>
+      </div>`;
+    }).join('')+'</div>'}
+  `);
 }
 
 function openRecherche(){
@@ -889,6 +932,15 @@ function openDetail(id){
       <button class="status-btn ${m.etat==='Terminée'?'active-dn':''}" onclick="setEtat(${id},'Terminée')">Terminée</button>
       <button class="status-btn ${m.etat==='Payée'?'active-py':''}" onclick="setEtat(${id},'Payée')">Payée</button>
     </div>
+    <div id="paiement-section-${id}" style="${m.etat==='Payée'?'':'display:none'}">
+      <div class="section-header" style="margin:8px 0 6px">💶 Moyen de paiement</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${['Espèces','Virement','Chèque','CB'].map(mp=>`
+          <button onclick="setMoyenPaiement(${id},'${mp}')" style="flex:1;min-width:70px;padding:8px 4px;border-radius:8px;border:1.5px solid ${m.moyenPaiement===mp?'#065f46':'#e5e5ea'};background:${m.moyenPaiement===mp?'#d1fae5':'#fff'};color:${m.moyenPaiement===mp?'#065f46':'#8e8e93'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">${mp}</button>
+        `).join('')}
+      </div>
+      ${m.moyenPaiement?`<div style="margin-top:8px;font-size:13px;color:#065f46;text-align:center">✅ Payé par ${m.moyenPaiement}</div>`:''}
+    </div>
 
     ${lignes.length>0?`
     <div class="section-header" style="margin:14px 0 4px">Travaux · ${fm(tot)}</div>
@@ -937,6 +989,26 @@ function setEtat(id,etat){
     if(btn.textContent==='Terminée'&&etat==='Terminée')btn.classList.add('active-dn');
     if(btn.textContent==='Payée'&&etat==='Payée')btn.classList.add('active-py');
   });}
+  // Afficher/masquer section paiement
+  var ps=document.getElementById('paiement-section-'+id);
+  if(ps)ps.style.display=etat==='Payée'?'':'none';
+}
+
+function setMoyenPaiement(id,moyen){
+  const m=D.missions.find(x=>x.id===id);if(!m)return;
+  m.moyenPaiement=moyen;save();
+  // Recharger la section paiement
+  var ps=document.getElementById('paiement-section-'+id);
+  if(ps){
+    ps.querySelectorAll('button').forEach(function(btn){
+      var isActive=btn.textContent===moyen;
+      btn.style.borderColor=isActive?'#065f46':'#e5e5ea';
+      btn.style.background=isActive?'#d1fae5':'#fff';
+      btn.style.color=isActive?'#065f46':'#8e8e93';
+    });
+    var info=ps.querySelector('div:last-child');
+    if(info&&info.style)info.innerHTML='✅ Payé par '+moyen;
+  }
 }
 
 function saveCompteRendu(id){
