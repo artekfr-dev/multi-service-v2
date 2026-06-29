@@ -169,8 +169,59 @@ try{
 
 let D={clients:[],missions:[],suivis:[],cid:1,mid:1,sid:1};
 
+// ===== INDEXEDDB =====
+let _idb=null;
+const IDB_NAME='MSH_DB';
+const IDB_STORE='data';
+const IDB_KEY='msa_v2';
+
+function openIDB(){
+  return new Promise(function(resolve,reject){
+    var req=indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded=function(e){
+      var db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)){
+        db.createObjectStore(IDB_STORE);
+      }
+    };
+    req.onsuccess=function(e){resolve(e.target.result);};
+    req.onerror=function(e){reject(e);};
+  });
+}
+
+function idbSave(data){
+  return new Promise(function(resolve){
+    if(!_idb){resolve();return;}
+    try{
+      var tx=_idb.transaction(IDB_STORE,'readwrite');
+      var store=tx.objectStore(IDB_STORE);
+      store.put(JSON.parse(JSON.stringify(data)),IDB_KEY);
+      tx.oncomplete=function(){console.log('✅ IndexedDB sauvegardé');resolve();};
+      tx.onerror=function(){resolve();};
+    }catch(e){resolve();}
+  });
+}
+
+function idbLoad(){
+  return new Promise(function(resolve){
+    if(!_idb){resolve(null);return;}
+    try{
+      var tx=_idb.transaction(IDB_STORE,'readonly');
+      var store=tx.objectStore(IDB_STORE);
+      var req=store.get(IDB_KEY);
+      req.onsuccess=function(e){resolve(e.target.result||null);};
+      req.onerror=function(){resolve(null);};
+    }catch(e){resolve(null);}
+  });
+}
+
+// ===== SAVE - 3 couches =====
 function save(){
+  // 1. IndexedDB (local permanent)
+  idbSave(D);
+  // 2. localStorage (fallback)
   try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}
+  // 3. Firebase (cloud)
   if(_db){
     var d2=JSON.parse(JSON.stringify(D));
     _db.collection('app').doc('data').set(d2)
@@ -182,7 +233,13 @@ function save(){
   }
 }
 
+// ===== INIT - charge depuis la meilleure source =====
 async function initData(){
+  // 1. Ouvrir IndexedDB
+  try{_idb=await openIDB();console.log('✅ IndexedDB ouvert');}
+  catch(e){console.warn('IndexedDB error:',e);}
+
+  // 2. Essayer Firebase d'abord (données les plus récentes)
   if(_db){
     try{
       var snap=await _db.collection('app').doc('data').get();
@@ -190,16 +247,38 @@ async function initData(){
         var fd=snap.data();
         if(fd&&(fd.clients||fd.missions)){
           D=fd;
+          // Sync vers IndexedDB et localStorage
+          await idbSave(D);
           try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}
-          console.log('✅ Firebase chargé');
+          console.log('✅ Firebase chargé - clients:',( D.clients||[]).length);
           return;
         }
       }
-    }catch(e){console.warn('FB load:',e);}
+    }catch(e){console.warn('Firebase load:',e);}
   }
+
+  // 3. Essayer IndexedDB
+  try{
+    var idbData=await idbLoad();
+    if(idbData&&(idbData.clients||idbData.missions)){
+      D=idbData;
+      try{localStorage.setItem(SK,JSON.stringify(D));}catch(e){}
+      console.log('✅ IndexedDB chargé - clients:',(D.clients||[]).length);
+      // Sync vers Firebase
+      if(_db)save();
+      return;
+    }
+  }catch(e){console.warn('IndexedDB load:',e);}
+
+  // 4. Fallback localStorage
   try{
     var r=localStorage.getItem(SK);
-    if(r){D=JSON.parse(r);console.log('✅ localStorage chargé');}
+    if(r){
+      D=JSON.parse(r);
+      console.log('✅ localStorage chargé - clients:',(D.clients||[]).length);
+      // Sync vers IndexedDB et Firebase
+      save();
+    }
   }catch(e){}
 }
 let linePhotos={};
